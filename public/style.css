@@ -1,0 +1,63 @@
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+.intro{
+    background-color: orangered;
+   
+}
+.intro-info{
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+   flex-direction: column;
+}
+.nav{
+    background-color: orangered!important;
+}
+.navbar-brand,.nav-link{
+    color: white;
+}
+.card-img{
+    width: 4rem;
+    height: 4rem;
+   
+}
+.card-btn{
+    display: flex;
+    justify-content: space-between;
+    
+
+}
+.bi{
+    color: orangered;
+    font-size: 3rem;
+}
+
+.nav-link:hover{
+    color:orangered;
+}
+.btn-signup{
+    background-color: orangered;
+    color: white;
+}
+.btn-login{
+    background-color: orangered;
+    color: white;
+
+}
+
+
+.modal-signupform{
+    display: flex;
+    flex-direction: column;
+
+
+}
+
+.modal-signupform input{
+    border: 2px solid black;
+}

@@ -1,0 +1,15 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Dealer</title></head><body>
+<h1>Dealer Dashboard</h1>
+<pre id="profile"></pre>
+<button id="logout">Logout</button>
+<script>
+async function load() {
+  const t = localStorage.getItem('token');
+  if (!t) return location.href='index.html';
+  const r = await fetch('/api/me', { headers: { Authorization: 'Bearer ' + t }});
+  if (!r.ok) { localStorage.clear(); return location.href='index.html'; }
+  const j = await r.json(); document.getElementById('profile').textContent = JSON.stringify(j.profile,null,2);
+}
+document.getElementById('logout').addEventListener('click', ()=>{ localStorage.clear(); location.href='index.html'; });
+load();
+</script></body></html>

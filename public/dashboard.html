@@ -1,0 +1,10 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Dashboard</title></head><body>
+<script>
+const role = localStorage.getItem('role');
+if (role === 'user') location.href = 'user-home.html';
+else if (role === 'serviceman') location.href = 'serviceman-dashboard.html';
+else if (role === 'dealer') location.href = 'dealer-dashboard.html';
+else if (role === 'admin') location.href = 'admin-dashboard.html';
+else location.href = 'index.html';
+</script>
+</body></html>
