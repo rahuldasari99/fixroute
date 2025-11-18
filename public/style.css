@@ -5,7 +5,7 @@
     font-family: 'Montserrat', system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 .intro{
-    background-color: orangered;
+  background: linear-gradient(90deg,rgba(0, 0, 0, 1) 0%, rgba(184, 57, 11, 1) 70%, rgba(255, 69, 0, 1) 100%);
    
 }
 .intro-info{
@@ -26,9 +26,13 @@
     height: 4rem;
    
 }
+.card-body{
+  border-radius: 0.8rem;
+}
 .card-btn{
     display: flex;
     justify-content: space-between;
+    align-items: center;
     
 
 }
@@ -67,4 +71,75 @@
 }
 .footer .bi{
     color: white;
+}
+
+select {
+  width: 100%;
+  padding: 10px 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+  outline: none;
+  transition: 0.2s;
+}
+
+select:focus {
+  border-color: #FF4500;
+  box-shadow: 0 0 4px rgba(255, 69, 0, 0.4);
+}
+input {
+  width: 100%;
+  padding: 10px 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+  outline: none;
+  transition: 0.2s;
+}
+
+/* On focus */
+input:focus {
+  border-color: #FF4500;
+  box-shadow: 0 0 4px rgba(255, 69, 0, 0.4);
+}
+.card {
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+
+.modal-profiledetails{
+  display: flex;
+  flex-direction: column;
+}
+.btn-book{
+  background-color: orangered;
+  color: white;
+  height: 100%;
+  font-size: small;
+}
+.btn-book:hover{
+  background-color: white;
+  color: #FF4500;
+  border: 1px solid black;
+}
+
+.custom-carousel .carousel-inner {
+  height: 300px; /* adjust height as you want */
+  border-radius: 20px; /* rounded corners */
+  overflow: hidden; /* important for rounded corners */
+}
+
+.custom-carousel .carousel-item img {
+  height: 100%;
+   /* crop nicely */
+  border-radius: 20px; /* optional */
+}
+.carousel-caption {
+  top: 20px;
+  bottom: auto;
 }

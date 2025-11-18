@@ -76,7 +76,7 @@
     <p class="card-text fs-5 text-capitalize">FUEL DELIVERY</p>
     <p class="card-text fs-6 text-secondary">ANYWHERE ANYTIME</p>
     <div class="card-btn">
-    <i class="bi bi-arrow-right-circle-fill"></i>
+    <a class="nav-link"  data-bs-toggle="modal" data-bs-target="#staticBackdrop"><i class="bi bi-arrow-right-circle-fill"></i></a> 
     <img src="assets/gas-station.png" class="card-img" alt="">
 
     </div>
@@ -90,7 +90,7 @@
     <p class="card-text fs-5 text-uppercase">Tyre Replacement</p>
     <p class="card-text fs-6 text-secondary">On-the-Spot Help</p>
     <div class="card-btn">
-    <i class="bi bi-arrow-right-circle-fill"></i>
+    <a class="nav-link"  data-bs-toggle="modal" data-bs-target="#staticBackdrop"><i class="bi bi-arrow-right-circle-fill"></i></a> 
     <img src="assets/racing.png" class="card-img" alt="">
 
     </div>
@@ -105,7 +105,7 @@
    <p class="card-text fs-5 text-uppercase">Battery Service</p>
     <p class="card-text fs-6 text-secondary">Jump Start & Replace</p>
     <div class="card-btn">
-    <i class="bi bi-arrow-right-circle-fill"></i>
+    <a class="nav-link"  data-bs-toggle="modal" data-bs-target="#staticBackdrop"><i class="bi bi-arrow-right-circle-fill"></i></a> 
     <img src="assets/car-battery.png" class="card-img" alt="">
 
     </div>
@@ -119,7 +119,7 @@
       <p class="card-text fs-5 text-uppercase">Mechanic</p>
     <p class="card-text fs-6 text-secondary">For Cars & Bikes</p>
     <div class="card-btn">
-    <i class="bi bi-arrow-right-circle-fill"></i>
+     <a class="nav-link"  data-bs-toggle="modal" data-bs-target="#staticBackdrop"><i class="bi bi-arrow-right-circle-fill"></i></a> 
     <img src="assets/automobile-with-wrench.png" class="card-img" alt="">
 
     </div>
@@ -193,13 +193,15 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
+        
         <h1 class="modal-title fs-5" id="staticBackdropLabel">LOGIN</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
          <section>
-    <h2>Login</h2>
+   <label for="l_email">ENTER EMAIL</label>
     <input id="l_email" placeholder="Email"><br>
+    <label for="l_password">ENTER PASSWORD</label>
     <input id="l_password" type="password" placeholder="Password"><br>
     <select id="l_role">
       <option value="">(optional) Role</option>
@@ -248,7 +250,7 @@
         <!-- signup form start -->
     <section class="modal-signupform">
  
-    <h2>Signup</h2>
+    
     <label for="s_name">FULL NAME</label>
     <input id="s_name" placeholder="Full name"><br>
      <label for="s_phone">PHONE NUMBER</label>
@@ -344,7 +346,7 @@
             </ul>
           </div>
         </div>
-        <hr class="border-top border-success border-2" />
+        <hr class="border-top  border-2" />
         <!-- footer-navigation end -->
         <div class="text-center">
           <p class="fs-6 fw-bold">

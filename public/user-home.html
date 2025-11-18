@@ -1,15 +1,364 @@
-<!doctype html><html><head><meta charset="utf-8"><title>User Home</title></head><body>
-<h1>User Dashboard</h1>
-<pre id="profile"></pre>
-<button id="logout">Logout</button>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>User Home</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;600;700;900&display=swap" rel="stylesheet">
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
+  </head>
+  <body>
+<!-- navigation start -->
+ <nav class="navbar navbar-expand-sm bg-black sticky-top py-1">
+      <div class="container navedit">
+        <a class="navbar-brand text-white" href="#"
+          ><span class="display-6 fw-bold">Fix</span><span class="display-5">Route</span></a
+        >
+        <button
+          class="bi bi-list d-lg-none d-md-none"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        ></button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+             <li class="nav-item">
+              <a class="nav-link"  data-bs-toggle="modal" data-bs-target="#staticBackdrop" >PROFILE</a>
+            </li>
+           
+
+             <li class="nav-item">
+              <a class="nav-link"  id="logout" >LOGOUT</a>
+            </li>
+           
+         
+          </ul>
+         
+        </div>
+        
+      </div>
+    </nav>
+
+<!-- navigation end -->
+
+
+
+
+
+<!-- main section start -->
+
+<div class="container my-4">
+  
+<p class="fs-4 fw-normal"><span id="userName"></span> facing a breakdown? We’re nearby!</p>
+
+<div id="carouselExample" class="carousel slide custom-carousel">
+  <div class="carousel-inner">
+    <div class="carousel-item active">
+      <img src="assets/ChatGPT Image Nov 18, 2025 at 12_27_41 PM.png" class="d-block w-100" alt="...">
+      <div class="carousel-caption d-none d-md-block">
+        <p class="display-3 fw-bold">Emergency Mechanic<p>
+        <p>Quick help anytime, anywhere</p>
+      </div>
+    </div>
+    <div class="carousel-item">
+      <img src="..." class="d-block w-100" alt="...">
+    </div>
+    <div class="carousel-item">
+      <img src="..." class="d-block w-100" alt="...">
+    </div>
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+</div>
+<!-- row 1 start -->
+   <div class="row">
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+  <div class="card-body shadow-lg">
+    
+    <p class="card-text fs-5 text-capitalize">FUEL DELIVERY</p>
+    <p class="card-text fs-6 text-secondary">ANYWHERE ANYTIME</p>
+    <div class="card-btn">
+    <button class="btn btn-book">BOOK NOW</button>
+    <img src="assets/gas-station.png" class="card-img" alt="">
+
+    </div>
+  </div>
+</div>
+        </div>
+
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+  <div class="card-body shadow-lg">
+    <p class="card-text fs-5 text-uppercase">Tyre Replacement</p>
+    <p class="card-text fs-6 text-secondary">On-the-Spot Help</p>
+    <div class="card-btn">
+    <button class="btn btn-book">BOOK NOW</button>
+    <img src="assets/racing.png" class="card-img" alt="">
+
+    </div>
+    
+  </div>
+</div>
+        </div>
+
+         <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+  <div class="card-body shadow-lg">
+   <p class="card-text fs-5 text-uppercase">Battery Service</p>
+    <p class="card-text fs-6 text-secondary">Jump Start & Replace</p>
+    <div class="card-btn">
+    <button class="btn btn-book">BOOK NOW</button>
+    <img src="assets/car-battery.png" class="card-img" alt="">
+
+    </div>
+  </div>
+</div>
+        </div>
+
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+  <div class="card-body shadow-lg">
+      <p class="card-text fs-5 text-uppercase">Mechanic</p>
+    <p class="card-text fs-6 text-secondary">For Cars & Bikes</p>
+    <div class="card-btn">
+    <button class="btn btn-book">BOOK NOW</button> 
+    <img src="assets/automobile-with-wrench.png" class="card-img" alt="">
+
+    </div>
+  </div>
+        </div>
+      </div>
+      </div>
+      <!-- row 1 end -->
+<!-- row 2 start -->
+<div class="row">
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+  <div class="card-body shadow-lg">
+    
+    <p class="card-text fs-5 text-capitalize">TOW ASSIST</p>
+    <p class="card-text fs-6 text-secondary">WHEREVER YOU ARE</p>
+    <div class="card-btn">
+    <button class="btn btn-book" data-service="Tow Assist">BOOK NOW</button>
+    <img src="assets/tow-truck.png" class="card-img" alt="">
+
+    </div>
+  </div>
+</div>
+        </div>
+
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+  <div class="card-body shadow-lg">
+    <p class="card-text fs-5 text-uppercase">TWO-WHEELER HELP</p>
+    <p class="card-text fs-6 text-secondary">ON THE GO</p>
+    <div class="card-btn">
+    <button class="btn btn-book">BOOK NOW</button>
+    <img src="assets/toolbox.png" class="card-img" alt="">
+
+    </div>
+    
+  </div>
+</div>
+        </div>
+
+         <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+  <div class="card-body shadow-lg">
+   <p class="card-text fs-5 text-uppercase">Battery Service</p>
+    <p class="card-text fs-6 text-secondary">Jump Start & Replace</p>
+    <div class="card-btn">
+    <button class="btn btn-book">BOOK NOW</button>
+    <img src="assets/car-battery.png" class="card-img" alt="">
+
+    </div>
+  </div>
+</div>
+        </div>
+
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+  <div class="card-body shadow-lg">
+      <p class="card-text fs-5 text-uppercase">Mechanic</p>
+    <p class="card-text fs-6 text-secondary">For Cars & Bikes</p>
+    <div class="card-btn">
+    <button class="btn btn-book">BOOK NOW</button> 
+    <img src="assets/automobile-with-wrench.png" class="card-img" alt="">
+
+    </div>
+  </div>
+        </div>
+      </div>
+      </div>
+
+<!-- row 2 end -->
+
+
+
+
+</div>
+
+<!-- main section end -->
+
+
+  <!-- modal section login start -->
+<!-- Button trigger modal -->
+<!-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+  Launch static backdrop modal
+</button> -->
+
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">PROFILE</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+         <pre id="profile" class="modal-profiledetails">
+         </pre>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+  <!-- modal section end -->
+
+
+  <!-- modal for cards start -->
+<div class="modal fade" id="serviceModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Book Service</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <label>Service Name</label>
+        <input type="text" id="serviceName" class="form-control" readonly>
+
+        <label>Your Name</label>
+        <input type="text" id="userName" class="form-control" readonly>
+
+        <label>Mobile</label>
+        <input type="text" id="userMobile" class="form-control" readonly>
+
+        <label>Your Location</label>
+        <input type="text" id="userLocation" class="form-control" readonly>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary">Submit Booking</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+  <!-- modal for cards end -->
+
+
 <script>
 async function load() {
-  const t = localStorage.getItem('token');
-  if (!t) return location.href='index.html';
-  const r = await fetch('/api/me', { headers: { Authorization: 'Bearer ' + t }});
-  if (!r.ok) { localStorage.clear(); return location.href='index.html'; }
-  const j = await r.json(); document.getElementById('profile').textContent = JSON.stringify(j.profile,null,2);
+  const t = localStorage.getItem("token");
+  if (!t) return (location.href = "index.html");
+
+  const r = await fetch("/api/me", {
+    headers: { Authorization: "Bearer " + t },
+  });
+
+  if (!r.ok) {
+    localStorage.clear();
+    return (location.href = "index.html");
+  }
+
+  const j = await r.json();
+
+  // Show Name in top bar (or wherever)
+  document.getElementById("userName").textContent = j.profile.full_name;
+
+  // Show formatted details
+  document.getElementById("profile").innerHTML = `
+    <p><strong>Name:</strong> ${j.profile.full_name}</p>
+    <p><strong>Email:</strong> ${j.profile.email}</p>
+    <p><strong>Phone:</strong> ${j.profile.phone || "Not Added"}</p>
+  `;
 }
-document.getElementById('logout').addEventListener('click', ()=>{ localStorage.clear(); location.href='index.html'; });
+
+document.getElementById("logout").addEventListener("click", () => {
+  localStorage.clear();
+  location.href = "index.html";
+});
+
 load();
-</script></body></html>
+
+// CLICK HANDLER FOR ALL BOOK NOW BUTTONS
+document.addEventListener("click", async function (e) {
+  if (e.target.classList.contains("btn-book")) {
+
+    // 1️⃣ SERVICE NAME
+    const service = e.target.getAttribute("data-service");
+    document.getElementById("serviceName").value = service;
+
+    // 2️⃣ USER DETAILS FROM /api/me
+    const token = localStorage.getItem("token");
+    const r = await fetch("/api/me", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const j = await r.json();
+
+    document.getElementById("userName").value = j.profile.full_name;
+    document.getElementById("userMobile").value = j.profile.phone;
+
+    // 3️⃣ AUTO-DETECT LOCATION
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        document.getElementById("userLocation").value = `${lat}, ${lon}`;
+      }, err => {
+        document.getElementById("userLocation").value = "Location denied";
+      });
+    }
+
+    // 4️⃣ OPEN MODAL
+    const modal = new bootstrap.Modal(document.getElementById("serviceModal"));
+    modal.show();
+  }
+});
+
+
+
+</script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+  </body>
+</html>
