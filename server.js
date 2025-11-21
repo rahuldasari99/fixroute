@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
+const axios = require('axios');
 
 const app = express();
 app.use(express.json());
@@ -170,6 +171,170 @@ app.get('/debug/tables', async (req, res) => {
     res.status(500).json({ error: String(err) });
   }
 });
+
+//mapbox
+
+// Send Mapbox token to frontend
+app.get("/api/mapbox-token", (req, res) => {
+  return res.json({ token: process.env.MAPBOX_TOKEN });
+});
+
+//servicemen map update
+// Update serviceman location
+app.post("/api/serviceman/update-location", auth, async (req, res) => {
+  try {
+    const { lat, lon } = req.body;
+    const { id, role } = req.user;
+
+    if (role !== "serviceman")
+      return res.status(403).json({ error: "Only servicemen can update location" });
+
+    const { data, error } = await supabase
+      .from("servicemen")
+      .update({
+        location_lat: lat,
+        location_lng: lon
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error });
+
+    return res.json({ success: true, data });
+
+  } catch (err) {
+    return res.status(500).json({ error: String(err) });
+  }
+});
+
+// Delete location
+app.post("/api/serviceman/delete-location", auth, async (req, res) => {
+  try {
+    const { id, role } = req.user;
+
+    if (role !== "serviceman")
+      return res.status(403).json({ error: "Only servicemen can delete location" });
+
+    const { data, error } = await supabase
+      .from("servicemen")
+      .update({
+        location_lat: null,
+        location_lng: null
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error });
+
+    return res.json({ success: true, data });
+
+  } catch (err) {
+    return res.status(500).json({ error: String(err) });
+  }
+});
+
+// Recommend servicemen: find nearby servicemen from DB, call Python ML service for ETA, return sorted
+app.post('/api/recommend-servicemen', auth, async (req, res) => {
+  try {
+    const { service_type, lat, lng, max_distance_km = 25 } = req.body;
+    if (lat == null || lng == null) return res.status(400).json({ error: 'lat and lng required' });
+
+    // Fetch available servicemen with locations
+    const { data: svcData, error } = await supabase
+      .from('servicemen')
+      .select('id, full_name, base_cost, rating, location_lat, location_lng, is_available')
+      .eq('is_available', true);
+
+    if (error) return res.status(500).json({ error });
+
+    function haversineKm(lat1, lon1, lat2, lon2) {
+      if (lat2 == null || lon2 == null) return 9999;
+      const toRad = (v) => (v * Math.PI) / 180;
+      const R = 6371;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+                Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*
+                Math.sin(dLon/2)*Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    const candidates = (svcData || [])
+      .map(s => {
+        const distance_km = haversineKm(lat, lng, s.location_lat, s.location_lng);
+        return { ...s, distance_km };
+      })
+      .filter(s => s.distance_km <= max_distance_km)
+      .slice(0, 200); // safety limit
+
+    // Prepare payload for Python ML service
+    const mlPayload = {
+      user_lat: lat,
+      user_lng: lng,
+      service_type: service_type || '',
+      servicemen: candidates.map(c => ({
+        id: c.id,
+        full_name: c.full_name,
+        base_cost: Number(c.base_cost) || 0,
+        rating: Number(c.rating) || 0,
+        location_lat: c.location_lat,
+        location_lng: c.location_lng
+      }))
+    };
+
+    // Call Python ML service (local)
+    const mlResp = await axios.post('http://127.0.0.1:9000/predict', mlPayload, { timeout: 15000 });
+    const results = mlResp.data.results || [];
+
+    return res.json({ results });
+
+  } catch (err) {
+    console.error('/api/recommend-servicemen err', err.toString());
+    return res.status(500).json({ error: String(err) });
+  }
+});
+
+// Book service (insert into bookings)
+app.post('/api/book-service', auth, async (req, res) => {
+  try {
+    const { serviceman_id, service_type, lat, lng, eta_predicted } = req.body;
+    const user_id = req.user.id;
+
+    if (!serviceman_id || lat == null || lng == null) {
+      return res.status(400).json({ error: 'serviceman_id, lat, lng required' });
+    }
+
+    const row = {
+      user_id,
+      serviceman_id,
+      service_type: service_type || null,
+      lat: lat,
+      lng: lng,
+      eta_predicted: eta_predicted || null,
+      status: 'created'
+    };
+
+    const { data, error } = await supabase
+      .from('bookings')
+      .insert([row])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('/api/book-service supabase insert', error);
+      return res.status(500).json({ error: error });
+    }
+
+    return res.json({ success: true, booking: data });
+  } catch (err) {
+    console.error('/api/book-service err', err);
+    return res.status(500).json({ error: String(err) });
+  }
+});
+
 
 // static frontend
 app.use(express.static(path.join(__dirname, 'public')));

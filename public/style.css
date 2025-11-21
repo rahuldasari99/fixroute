@@ -21,6 +21,14 @@
 .navbar-brand,.nav-link{
     color: white;
 }
+/* need to change color */
+.bi-list{
+    color: white;
+    background:none;
+    border: none;
+    font-size: 1.7rem;
+}
+
 .card-img{
     width: 4rem;
     height: 4rem;
@@ -104,13 +112,7 @@ input:focus {
   border-color: #FF4500;
   box-shadow: 0 0 4px rgba(255, 69, 0, 0.4);
 }
-.card {
-  transition: transform 0.3s ease;
-}
 
-.card:hover {
-  transform: scale(1.05);
-}
 
 .modal-profiledetails{
   display: flex;
@@ -119,13 +121,26 @@ input:focus {
 .btn-book{
   background-color: orangered;
   color: white;
-  height: 100%;
+  /* height: 100%; */
   font-size: small;
 }
 .btn-book:hover{
   background-color: white;
   color: #FF4500;
   border: 1px solid black;
+  border: 1px solid orangered;
+}
+.btn-cancel{
+  background-color:red;
+  color: white;
+  /* height: 100%; */
+  font-size: small;
+  
+}
+.btn-cancel:hover{
+  background-color: white;
+  color: red;
+  border:1px solid red;
 }
 
 .custom-carousel .carousel-inner {
@@ -142,4 +157,21 @@ input:focus {
 .carousel-caption {
   top: 20px;
   bottom: auto;
+}
+#map {
+  width: 100%;
+  height: 250px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.user-card{
+  border: none;
+}
+.loc-card{
+  border: none;
+}
+.btn-wrapper{
+ display: flex;
+ justify-content: space-around;
 }

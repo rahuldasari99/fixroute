@@ -1,15 +1,393 @@
-<!doctype html><html><head><meta charset="utf-8"><title>Serviceman</title></head><body>
-<h1>Serviceman Dashboard</h1>
-<pre id="profile"></pre>
-<button id="logout">Logout</button>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>User Home</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;600;700;900&display=swap" rel="stylesheet">
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
+  </head>
+
+<body>
+  <!-- navigation start -->
+ <nav class="navbar navbar-expand-sm bg-black sticky-top py-1">
+      <div class="container navedit">
+        <a class="navbar-brand text-white" href="#"
+          ><span class="display-6 fw-bold">Fix</span><span class="display-5">Route</span></a
+        >
+        <button
+          class="bi bi-list d-lg-none d-md-none"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        ></button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+             <li class="nav-item">
+              <a class="nav-link"  data-bs-toggle="modal" data-bs-target="#staticBackdrop" >PROFILE</a>
+            </li>
+           
+
+             <li class="nav-item">
+              <a class="nav-link"  id="logout" >LOGOUT</a>
+            </li>
+           
+         
+          </ul>
+         
+        </div>
+        
+      </div>
+    </nav>
+
+<!-- navigation end -->
+ <!-- main section start -->
+<!-- <div class="container my-4">
+<p class="fs-4 fw-normal"><span id="userName"></span>, your tools. Your skills. Your mission today awaits!</p>
+
+<div class="card-map-req   p-4" >
+  <div class="row">
+<div class="col-sm-12 col-md-6 col-lg-6 card card-location-left p-5">
+<h4 class="mt-4">Update Your Live Location</h4>
+
+<button id="btnDetect" class="btn btn-book mt-2">Detect My Location</button>
+<button id="btnDelete" class="btn btn-cancel mt-2">Delete Saved Location</button>
+
+<input id="lat" class="form-control mt-3" placeholder="Latitude" readonly>
+<input id="lon" class="form-control mt-2" placeholder="Longitude" readonly>
+
+<div id="map" style="width:100%; height:250px; background:#eee; border-radius:10px; margin-top:15px;"></div>
+</div>
+</div>
+
+
+<div class="card card-location-right p-5">
+<h4 class="mt-4">User Requests</h4>
+
+<button id="btnDetect" class="btn btn-book mt-2">Detect My Location</button>
+<button id="btnDelete" class="btn btn-cancel mt-2">Delete Saved Location</button>
+
+<input id="lat" class="form-control mt-3" placeholder="Latitude" readonly>
+<input id="lon" class="form-control mt-2" placeholder="Longitude" readonly>
+
+<div id="map" style="width:100%; height:250px; background:#eee; border-radius:10px; margin-top:15px;"></div>
+</div>
+</div> -->
+<div class="container my-4">
+
+  <p class="fs-4 fw-normal">
+    <span id="userName"></span>, your tools. Your skills. Your mission today awaits!
+  </p>
+<div id="carouselExample" class="carousel slide custom-carousel">
+  <div class="carousel-inner">
+    <div class="carousel-item active">
+      <img src="assets/ChatGPT Image Nov 18, 2025 at 12_27_41 PM.png" class="d-block w-100" alt="...">
+      <div class="carousel-caption d-none d-md-block">
+        <p class="display-3 fw-bold">Mobile Mechanic<p>
+        <p class="fs-4">You Move. Their Vehicle Moves.</p>
+      </div>
+    </div>
+    <div class="carousel-item">
+      <img src="..." class="d-block w-100" alt="...">
+    </div>
+    <div class="carousel-item">
+      <img src="..." class="d-block w-100" alt="...">
+    </div>
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+</div>
+  <!-- ROW IS MANDATORY -->
+  <div class="row g-4">
+
+    <!-- LEFT CARD -->
+    <div class="col-sm-12 col-md-6 col-lg-6">
+      <div class="card loc-card p-5">
+        <h4 class="mt-4 text-center">Update Your Live Location</h4>
+        <div class="btn-wrapper">
+        <button id="btnDetect" class="btn btn-book mt-2 mx-1">Detect My Location</button>
+        <button id="btnDelete" class="btn btn-cancel mt-2 mx-1">Delete Location</button>
+         </div>
+        <input id="lat" class="form-control mt-3" placeholder="Latitude" readonly>
+        <input id="lon" class="form-control mt-2" placeholder="Longitude" readonly>
+
+        <div id="map" style="width:100%; height:250px; background:#eee; border-radius:10px; margin-top:15px;"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT CARD -->
+    <div class="col-sm-12 col-md-6 col-lg-6">
+      <div class="card user-card p-5">
+        <h4 class="mt-4">User Requests</h4>
+
+        <!-- <button id="btnDetect2" class="btn btn-book mt-2">Detect My Location</button>
+        <button id="btnDelete2" class="btn btn-cancel mt-2">Delete Saved Location</button>
+
+        <input id="lat2" class="form-control mt-3" placeholder="Latitude" readonly>
+        <input id="lon2" class="form-control mt-2" placeholder="Longitude" readonly>
+
+        <div id="map2" style="width:100%; height:250px; background:#eee; border-radius:10px; margin-top:15px;"></div>  -->
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">PROFILE</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+         <pre id="profile" class="modal-profiledetails">
+         </pre>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+  <!-- modal section end -->
+
+
+
+
+
 <script>
+/* ----------------------------------------------------------
+   YOUR ORIGINAL SCRIPT (NOT MODIFIED)
+---------------------------------------------------------- */
+// async function load() {
+//   const t = localStorage.getItem("token");
+//   if (!t) return (location.href = "index.html");
+
+//   const r = await fetch("/api/me", {
+//     headers: { Authorization: "Bearer " + t },
+//   });
+
+//   if (!r.ok) {
+//     localStorage.clear();
+//     return (location.href = "index.html");
+//   }
+
+//   const j = await r.json();
+
+//   // Show Name in top bar (or wherever)
+//   document.getElementById("userName").textContent = j.profile.full_name;
+
+//   // Show formatted details
+//   document.getElementById("profile").innerHTML = `
+//     <p><strong>Name:</strong> ${j.profile.full_name}</p>
+//     <p><strong>Email:</strong> ${j.profile.email}</p>
+//     <p><strong>Phone:</strong> ${j.profile.phone || "Not Added"}</p>
+//   `;
+// }
+
+// document.getElementById("logout").addEventListener("click", () => {
+//   localStorage.clear();
+//   location.href = "index.html";
+// });
+
+// load();
+
+
+
+
 async function load() {
   const t = localStorage.getItem('token');
   if (!t) return location.href='index.html';
+
   const r = await fetch('/api/me', { headers: { Authorization: 'Bearer ' + t }});
-  if (!r.ok) { localStorage.clear(); return location.href='index.html'; }
-  const j = await r.json(); document.getElementById('profile').textContent = JSON.stringify(j.profile,null,2);
+  
+  if (!r.ok) { 
+    localStorage.clear(); 
+    return location.href='index.html'; 
+  }
+
+  const j = await r.json(); 
+
+  // Keep your old functionality
+  document.getElementById("userName").textContent = j.profile.full_name;
+//   // Show formatted details
+   document.getElementById("profile").innerHTML = `
+     <p><strong>Name:</strong> ${j.profile.full_name}</p>
+    <p><strong>Email:</strong> ${j.profile.email}</p>
+    <p><strong>Phone:</strong> ${j.profile.phone || "Not Added"}</p>
+     <p><strong>Vehicle type:</strong> ${j.profile.vehicle_types || "Not Added"}</p>
+      <p><strong>Base Charge:</strong> ${j.profile.base_cost || "Not Added"}</p>
+       <p><strong>Rating:</strong> ${j.profile.rating || "Not Added"}</p>
+        <p><strong>Status:</strong> <span class="text-success">${j.profile.is_available || "Not Added"}</span></p>
+       
+  `;
+
+  /* ----------------------------------------------------------
+     NEW: LOAD SAVED SERVICEMAN LOCATION ON REFRESH
+  ---------------------------------------------------------- */
+  const savedLat = j.profile.location_lat;
+  const savedLon = j.profile.location_lng;
+
+  if (savedLat && savedLon) {
+    document.getElementById("lat").value = savedLat;
+    document.getElementById("lon").value = savedLon;
+
+    // Load mapbox token if not loaded yet
+    if (!MAPBOX_TOKEN) await loadToken();
+
+    // Clear previous map
+    document.getElementById("map").innerHTML = "";
+
+    // Draw the map at saved location
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+
+    const map = new mapboxgl.Map({
+      container: "map",
+      style: "mapbox://styles/mapbox/streets-v12",
+      center: [savedLon, savedLat],
+      zoom: 14
+    });
+
+    new mapboxgl.Marker({ color: "red" })
+      .setLngLat([savedLon, savedLat])
+      .addTo(map);
+  }
 }
-document.getElementById('logout').addEventListener('click', ()=>{ localStorage.clear(); location.href='index.html'; });
+
+
+document.getElementById('logout').addEventListener('click', ()=>{
+  localStorage.clear(); 
+  location.href='index.html';
+});
+
 load();
-</script></body></html>
+/* ----------------------------------------------------------
+   END OF YOUR OLD SCRIPT
+---------------------------------------------------------- */
+
+
+
+/* ----------------------------------------------------------
+   NEW FUNCTIONALITY – MAP, UPDATE & DELETE LOCATION
+---------------------------------------------------------- */
+
+// Load Mapbox token from backend
+let MAPBOX_TOKEN = "";
+
+async function loadToken() {
+  const res = await fetch("/api/mapbox-token");
+  const j = await res.json();
+  MAPBOX_TOKEN = j.token;
+}
+loadToken();
+
+
+// Detect and Update Location
+document.getElementById("btnDetect").addEventListener("click", () => {
+  if (!navigator.geolocation) return alert("Geolocation not supported");
+
+  navigator.geolocation.getCurrentPosition(async pos => {
+
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+
+    document.getElementById("lat").value = lat;
+    document.getElementById("lon").value = lon;
+
+    // Clear old map before creating a new one
+    document.getElementById("map").innerHTML = "";
+
+    // Show Map
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+
+    const map = new mapboxgl.Map({
+      container: "map",
+      style: "mapbox://styles/mapbox/streets-v12",
+      center: [lon, lat],
+      zoom: 14
+    });
+
+    new mapboxgl.Marker({ color: "red" })
+      .setLngLat([lon, lat])
+      .addTo(map);
+
+    // Update location in Supabase
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("/api/serviceman/update-location", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + token,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ lat, lon })
+    });
+
+    const j = await res.json();
+
+    if (j.success) {
+      alert("Location Updated Successfully!");
+    } else {
+      alert("Failed: " + JSON.stringify(j.error));
+    }
+
+  }, () => {
+    alert("Location access denied.");
+  });
+});
+
+
+// Delete Serviceman Location
+document.getElementById("btnDelete").addEventListener("click", async () => {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch("/api/serviceman/delete-location", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + token }
+  });
+
+  const j = await res.json();
+
+  if (j.success) {
+    alert("Location Removed!");
+    document.getElementById("lat").value = "";
+    document.getElementById("lon").value = "";
+    document.getElementById("map").innerHTML = "";
+  } else {
+    alert("Error: " + JSON.stringify(j.error));
+  }
+});
+</script>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+
+</body></html>
