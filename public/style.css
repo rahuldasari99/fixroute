@@ -175,3 +175,20 @@ input:focus {
  display: flex;
  justify-content: space-around;
 }
+.servicemen-info{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+}
+.tech-img{
+ 
+   width: 8rem;
+   height: 8rem;
+   
+
+}
+.tech-img img{
+  height: 100%;
+  width: 100%;
+}
