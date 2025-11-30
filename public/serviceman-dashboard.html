@@ -732,7 +732,7 @@ async function sendBill(bookingId) {
   };
 
   // 4️⃣ Call ML API
-  const mlRes = await fetch("http://127.0.0.1:9000/predict_price", {
+  const mlRes = await fetch("api/predict_price", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(mlPayload)

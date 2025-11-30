@@ -1347,6 +1347,22 @@ app.get('/api/user/bookings', auth, async (req, res) => {
     return res.status(500).json({ error: String(err) });
   }
 });
+/* =============================
+   ML → PRICE PREDICTION (Forward to Render ML Server)
+============================= */
+app.post("/api/predict_price", async (req, res) => {
+  try {
+    const mlUrl = process.env.ML_API_URL + "/predict_price";
+
+    const response = await axios.post(mlUrl, req.body);
+
+    res.json(response.data);
+  } catch (err) {
+    console.error("ML predict_price ERROR:", err?.response?.data || err);
+    res.status(500).json({ error: "ML service unavailable" });
+  }
+});
+
 
 // FIX: Unified token validator for all billing routes
 async function validateToken(req) {
