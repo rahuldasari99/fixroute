@@ -3,391 +3,878 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Serviceman Dashboard</title>
 
-    <title>User Home</title>
+    <!-- Mapbox -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- Bootstrap + icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;600;700;900&display=swap" rel="stylesheet">
-   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 
+    <style>
+      /* small helper styles */
+      .req-map { width:100%; height:250px; border-radius:8px; overflow:hidden; margin-top:10px; }
+      .accepted-section { margin-bottom: 1rem; }
+      .pending-section { margin-top: 1rem; }
+     
+      .card .small-muted { font-size:0.9rem; color:#666; }
+    </style>
   </head>
 
-<body>
-  <!-- navigation start -->
- <nav class="navbar navbar-expand-sm bg-black sticky-top py-1">
+  <body>
+    <!-- navigation -->
+    <nav class="navbar navbar-expand-sm bg-black sticky-top py-1">
       <div class="container navedit">
-        <a class="navbar-brand text-white" href="#"
-          ><span class="display-6 fw-bold">Fix</span><span class="display-5">Route</span></a
-        >
-        <button
-          class="bi bi-list d-lg-none d-md-none"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarSupportedContent"
-          aria-controls="navbarSupportedContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        ></button>
+        <a class="navbar-brand text-white" href="#"><span class="display-6 fw-bold">Fix</span><span class="display-5">Route</span></a>
+        <button class="bi bi-list d-lg-none d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"></button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
              <li class="nav-item">
-              <a class="nav-link"  data-bs-toggle="modal" data-bs-target="#staticBackdrop" >PROFILE</a>
+              <a class="nav-link" data-bs-toggle="modal" data-bs-target="#staticBackdrop">PROFILE</a>
             </li>
-           
-
              <li class="nav-item">
-              <a class="nav-link"  id="logout" >LOGOUT</a>
+              <a class="nav-link" id="logout">LOGOUT</a>
             </li>
-           
-         
           </ul>
-         
         </div>
-        
       </div>
     </nav>
 
-<!-- navigation end -->
- <!-- main section start -->
-<!-- <div class="container my-4">
-<p class="fs-4 fw-normal"><span id="userName"></span>, your tools. Your skills. Your mission today awaits!</p>
+    <!-- main -->
+    <div class="container my-4">
+      <p class="fs-4 fw-normal"><span id="userName"></span>, your tools. Your skills. Your mission today awaits!</p>
 
-<div class="card-map-req   p-4" >
-  <div class="row">
-<div class="col-sm-12 col-md-6 col-lg-6 card card-location-left p-5">
-<h4 class="mt-4">Update Your Live Location</h4>
+      <div class="row g-4">
+        <!-- left column -->
+        <div class="col-sm-12 col-md-6 col-lg-6">
+          <div class="card loc-card p-5">
+            <h4 class="mt-4 text-center">Update Your Live Location</h4>
+            <div class="btn-wrapper text-center">
+              <button id="btnDetect" class="btn btn-book mt-2 mx-1">Detect My Location</button>
+              <button id="btnDelete" class="btn btn-cancel mt-2 mx-1">Delete Location</button>
+            </div>
 
-<button id="btnDetect" class="btn btn-book mt-2">Detect My Location</button>
-<button id="btnDelete" class="btn btn-cancel mt-2">Delete Saved Location</button>
+            <input id="lat" class="form-control mt-3" placeholder="Latitude" readonly>
+            <input id="lon" class="form-control mt-2" placeholder="Longitude" readonly>
 
-<input id="lat" class="form-control mt-3" placeholder="Latitude" readonly>
-<input id="lon" class="form-control mt-2" placeholder="Longitude" readonly>
+            <div id="map" style="width:100%; height:250px; background:#eee; border-radius:10px; margin-top:15px;"></div>
+          </div>
+        </div>
 
-<div id="map" style="width:100%; height:250px; background:#eee; border-radius:10px; margin-top:15px;"></div>
-</div>
-</div>
+        <!-- right column -->
+        <div class="col-sm-12 col-md-6 col-lg-6">
+          <div class="card user-card p-5">
+            <h4 class="mt-4">Accepted Jobs (Top)</h4>
+            <!-- accepted jobs container (will not be refreshed by polling) -->
+            <div id="acceptedJobs" class="accepted-section">
+             
 
+            </div>
 
-<div class="card card-location-right p-5">
-<h4 class="mt-4">User Requests</h4>
+            <hr>
 
-<button id="btnDetect" class="btn btn-book mt-2">Detect My Location</button>
-<button id="btnDelete" class="btn btn-cancel mt-2">Delete Saved Location</button>
-
-<input id="lat" class="form-control mt-3" placeholder="Latitude" readonly>
-<input id="lon" class="form-control mt-2" placeholder="Longitude" readonly>
-
-<div id="map" style="width:100%; height:250px; background:#eee; border-radius:10px; margin-top:15px;"></div>
-</div>
-</div> -->
-<div class="container my-4">
-
-  <p class="fs-4 fw-normal">
-    <span id="userName"></span>, your tools. Your skills. Your mission today awaits!
-  </p>
-<div id="carouselExample" class="carousel slide custom-carousel">
-  <div class="carousel-inner">
-    <div class="carousel-item active">
-      <img src="assets/ChatGPT Image Nov 18, 2025 at 12_27_41 PM.png" class="d-block w-100" alt="...">
-      <div class="carousel-caption d-none d-md-block">
-        <p class="display-3 fw-bold">Mobile Mechanic<p>
-        <p class="fs-4">You Move. Their Vehicle Moves.</p>
-      </div>
-    </div>
-    <div class="carousel-item">
-      <img src="..." class="d-block w-100" alt="...">
-    </div>
-    <div class="carousel-item">
-      <img src="..." class="d-block w-100" alt="...">
-    </div>
-  </div>
-  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
-    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Previous</span>
-  </button>
-  <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Next</span>
-  </button>
-</div>
-  <!-- ROW IS MANDATORY -->
-  <div class="row g-4">
-
-    <!-- LEFT CARD -->
-    <div class="col-sm-12 col-md-6 col-lg-6">
-      <div class="card loc-card p-5">
-        <h4 class="mt-4 text-center">Update Your Live Location</h4>
-        <div class="btn-wrapper">
-        <button id="btnDetect" class="btn btn-book mt-2 mx-1">Detect My Location</button>
-        <button id="btnDelete" class="btn btn-cancel mt-2 mx-1">Delete Location</button>
-         </div>
-        <input id="lat" class="form-control mt-3" placeholder="Latitude" readonly>
-        <input id="lon" class="form-control mt-2" placeholder="Longitude" readonly>
-
-        <div id="map" style="width:100%; height:250px; background:#eee; border-radius:10px; margin-top:15px;"></div>
+            <h4 class="mt-4">Pending Requests (Below)</h4>
+            <!-- pending requests container (polls every 5s) -->
+            <div id="pendingRequests" class="pending-section"></div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- RIGHT CARD -->
-    <div class="col-sm-12 col-md-6 col-lg-6">
-      <div class="card user-card p-5">
-        <h4 class="mt-4">User Requests</h4>
-
-        <!-- <button id="btnDetect2" class="btn btn-book mt-2">Detect My Location</button>
-        <button id="btnDelete2" class="btn btn-cancel mt-2">Delete Saved Location</button>
-
-        <input id="lat2" class="form-control mt-3" placeholder="Latitude" readonly>
-        <input id="lon2" class="form-control mt-2" placeholder="Longitude" readonly>
-
-        <div id="map2" style="width:100%; height:250px; background:#eee; border-radius:10px; margin-top:15px;"></div>  -->
+    <!-- profile modal -->
+    <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5">PROFILE</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <pre id="profile" class="modal-profiledetails"></pre>
+          </div>
+        </div>
       </div>
     </div>
-
-  </div>
-</div>
-
-
-
-
-
-<!-- Modal -->
-<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        
-        <h1 class="modal-title fs-5" id="staticBackdropLabel">PROFILE</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-         <pre id="profile" class="modal-profiledetails">
-         </pre>
-      </div>
+<!-- BILL MODAL -->
+<div class="modal fade" id="billModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow-lg">
       
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">AI Billing Summary</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <input type="hidden" id="billBookingId">
+        <input type="hidden" id="billFinalPrice">
+
+        <div class="p-3 bg-light rounded mb-3">
+          <h6 class="fw-bold text-primary mb-2">AI Calculated Charges</h6>
+
+          <p class="mb-1"><strong>Distance:</strong> <span id="aiDistance">--</span></p>
+          <p class="mb-1"><strong>ETA:</strong> <span id="aiETA">--</span></p>
+          <p class="mb-1"><strong>Surge:</strong> ₹<span id="aiSurge">--</span></p>
+          <p class="mb-1"><strong>Base Charge:</strong> ₹<span id="aiBase">--</span></p>
+
+          <h4 class="mt-3 text-success">
+            Final Price: ₹<span id="aiFinalPrice">--</span>
+          </h4>
+        </div>
+
+        <label class="form-label">Extra Spare Part Charges (optional)</label>
+        <input type="number" class="form-control" id="billSpare" placeholder="Enter spare part price">
+
+        <label class="form-label mt-3">Description</label>
+        <textarea class="form-control" id="billDesc" rows="3" placeholder="Work description"></textarea>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="submitBill()">Send Bill</button>
+      </div>
+
     </div>
   </div>
 </div>
 
 
+    <!-- scripts -->
+    <script>
+      /*****************************************************************
+       * Serviceman dashboard script
+       * - Loads profile (/api/me)
+       * - Detects / deletes serviceman location
+       * - Loads accepted jobs from /api/serviceman/accepted (NO REFRESH)
+       * - Loads pending requests from /api/serviceman/requests (polling)
+       * - Accept/reject updates /api/serviceman/update-status
+       * - Draws clean route (line only) using Mapbox directions API
+       *****************************************************************/
 
+      // small helper for safety
+      const safe = (v, def='') => (v === null || v === undefined) ? def : v;
 
+      // Mapbox token holder
+      let MAPBOX_TOKEN = "";
 
+      async function loadToken() {
+        try {
+          const r = await fetch('/api/mapbox-token');
+          if (!r.ok) return console.warn('Could not load mapbox token');
+          const j = await r.json();
+          MAPBOX_TOKEN = j.token;
+        } catch (e) {
+          console.error('mapbox token load err', e);
+        }
+      }
+      loadToken();
 
+      // Profile load & initial saved location load
+      async function load() {
+        const t = localStorage.getItem('token');
+        if (!t) return location.href = 'index.html';
 
+        const r = await fetch('/api/me', { headers: { Authorization: 'Bearer ' + t }});
+        if (!r.ok) {
+          localStorage.clear();
+          return location.href = 'index.html';
+        }
+        const j = await r.json();
 
-  <!-- modal section end -->
+        document.getElementById('userName').textContent = j.profile.full_name || 'Serviceman';
+        document.getElementById('profile').innerHTML = `
+          <p><strong>Name:</strong> ${safe(j.profile.full_name)}</p>
+          <p><strong>Email:</strong> ${safe(j.profile.email)}</p>
+          <p><strong>Phone:</strong> ${safe(j.profile.phone || 'Not Added')}</p>
+          <p><strong>Vehicle type:</strong> ${safe(j.profile.vehicle_types || 'Not Added')}</p>
+          <p><strong>Base Charge:</strong> ${safe(j.profile.base_cost || 'Not Added')}</p>
+          <p><strong>Rating:</strong> ${safe(j.profile.rating || 'Not Added')}</p>
+          <p><strong>Status:</strong> <span class="text-success">${safe(j.profile.is_available || 'Not Added')}</span></p>
+        `;
 
+        // load saved serviceman location (if any)
+        const savedLat = j.profile.location_lat;
+        const savedLon = j.profile.location_lng;
+        if (savedLat && savedLon) {
+          document.getElementById('lat').value = savedLat;
+          document.getElementById('lon').value = savedLon;
 
+          if (!MAPBOX_TOKEN) await loadToken();
+          mapboxgl.accessToken = MAPBOX_TOKEN;
 
+          // make sure container is cleared
+          const container = document.getElementById('map');
+          container.innerHTML = '';
 
+          const map = new mapboxgl.Map({
+            container: 'map',
+            style: "mapbox://styles/mapbox/streets-v12",
+            center: [Number(savedLon), Number(savedLat)],
+            zoom: 14
+          });
 
-<script>
-/* ----------------------------------------------------------
-   YOUR ORIGINAL SCRIPT (NOT MODIFIED)
----------------------------------------------------------- */
-// async function load() {
-//   const t = localStorage.getItem("token");
-//   if (!t) return (location.href = "index.html");
+          // we are keeping a single marker for your own location here (visual)
+          new mapboxgl.Marker({ color: 'red' }).setLngLat([Number(savedLon), Number(savedLat)]).addTo(map);
+        }
+      }
 
-//   const r = await fetch("/api/me", {
-//     headers: { Authorization: "Bearer " + t },
-//   });
+      document.getElementById('logout').addEventListener('click', () => {
+        localStorage.clear();
+        location.href = 'index.html';
+      });
 
-//   if (!r.ok) {
-//     localStorage.clear();
-//     return (location.href = "index.html");
-//   }
+      // LOAD initial profile
+      load();
 
-//   const j = await r.json();
+      /*********************
+       * Detect & Update Location
+       *********************/
+      document.getElementById('btnDetect').addEventListener('click', () => {
+        if (!navigator.geolocation) return alert('Geolocation not supported');
 
-//   // Show Name in top bar (or wherever)
-//   document.getElementById("userName").textContent = j.profile.full_name;
+        navigator.geolocation.getCurrentPosition(async pos => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
 
-//   // Show formatted details
-//   document.getElementById("profile").innerHTML = `
-//     <p><strong>Name:</strong> ${j.profile.full_name}</p>
-//     <p><strong>Email:</strong> ${j.profile.email}</p>
-//     <p><strong>Phone:</strong> ${j.profile.phone || "Not Added"}</p>
-//   `;
-// }
+          document.getElementById('lat').value = lat;
+          document.getElementById('lon').value = lon;
 
-// document.getElementById("logout").addEventListener("click", () => {
-//   localStorage.clear();
-//   location.href = "index.html";
-// });
+          // draw map for serviceman location
+          if (!MAPBOX_TOKEN) await loadToken();
+          mapboxgl.accessToken = MAPBOX_TOKEN;
+          const mapDiv = document.getElementById('map');
+          mapDiv.innerHTML = '';
 
-// load();
+          const map = new mapboxgl.Map({
+            container: 'map',
+            style: "mapbox://styles/mapbox/streets-v12",
+            center: [lon, lat],
+            zoom: 14
+          });
 
+          new mapboxgl.Marker({ color: 'red' }).setLngLat([lon, lat]).addTo(map);
 
+          // send to server
+          try {
+            const token = localStorage.getItem('token');
+            const r = await fetch('/api/serviceman/update-location', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ lat, lon })
+            });
+            const j = await r.json();
+            if (j && j.success) {
+              alert('Location Updated Successfully!');
+            } else {
+              alert('Failed to update location: ' + JSON.stringify(j));
+            }
+          } catch (e) {
+            console.error('update location err', e);
+            alert('Error updating location');
+          }
 
+        }, () => alert('Location access denied.'));
+      });
 
-async function load() {
-  const t = localStorage.getItem('token');
-  if (!t) return location.href='index.html';
+      /*********************
+       * Delete location
+       *********************/
+      document.getElementById('btnDelete').addEventListener('click', async () => {
+        const token = localStorage.getItem('token');
+        try {
+          const r = await fetch('/api/serviceman/delete-location', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          const j = await r.json();
+          if (j && j.success) {
+            alert('Location Removed!');
+            document.getElementById('lat').value = '';
+            document.getElementById('lon').value = '';
+            document.getElementById('map').innerHTML = '';
+          } else {
+            alert('Error: ' + JSON.stringify(j));
+          }
+        } catch (e) {
+          console.error(e);
+          alert('Error deleting location');
+        }
+      });
 
-  const r = await fetch('/api/me', { headers: { Authorization: 'Bearer ' + t }});
-  
-  if (!r.ok) { 
-    localStorage.clear(); 
-    return location.href='index.html'; 
-  }
+      /*********************
+       * Helpers: add accepted card & pending card
+       *********************/
+      function createAcceptedCard(booking) {
+  const id = booking.id;
+  const container = document.createElement('div');
+  container.className = 'border rounded p-3 mb-3 shadow-sm';
+  container.id = 'acc-' + id;
 
-  const j = await r.json(); 
+  const userName = booking.user?.full_name || 'Unknown';
+  const phone = booking.user?.phone || 'N/A';
+  const service = booking.service_type || 'General Service';
+  const eta = Math.round(booking.eta_predicted || 0);
 
-  // Keep your old functionality
-  document.getElementById("userName").textContent = j.profile.full_name;
-//   // Show formatted details
-   document.getElementById("profile").innerHTML = `
-     <p><strong>Name:</strong> ${j.profile.full_name}</p>
-    <p><strong>Email:</strong> ${j.profile.email}</p>
-    <p><strong>Phone:</strong> ${j.profile.phone || "Not Added"}</p>
-     <p><strong>Vehicle type:</strong> ${j.profile.vehicle_types || "Not Added"}</p>
-      <p><strong>Base Charge:</strong> ${j.profile.base_cost || "Not Added"}</p>
-       <p><strong>Rating:</strong> ${j.profile.rating || "Not Added"}</p>
-        <p><strong>Status:</strong> <span class="text-success">${j.profile.is_available || "Not Added"}</span></p>
-       
+  container.innerHTML = `
+    <h5>${escapeHtml(service)}</h5>
+    <p><strong>User:</strong> ${escapeHtml(userName)}</p>
+    <p><strong>Phone:</strong> ${escapeHtml(phone)}</p>
+    <p class="small-muted"><strong>ETA:</strong> ${eta} min</p>
+    <p class="small-muted"><strong>User location:</strong> ${booking.lat}, ${booking.lng}</p>
+
+    <div id="map-${id}" class="req-map"></div>
+
+    <div class="mt-2 d-flex gap-2">
+      <button class="btn btn-book btn-sm"
+        onclick="openInGoogleMaps(
+          ${booking.serviceman_lat || document.getElementById('lat').value},
+          ${booking.serviceman_lng || document.getElementById('lon').value},
+          ${booking.lat},
+          ${booking.lng}
+        )">
+        Open in Google Maps
+      </button>
+
+      <button class="btn btn-primary btn-sm"
+        onclick="sendBill('${id}')">
+        Send Bill
+      </button>
+    </div>
   `;
 
-  /* ----------------------------------------------------------
-     NEW: LOAD SAVED SERVICEMAN LOCATION ON REFRESH
-  ---------------------------------------------------------- */
-  const savedLat = j.profile.location_lat;
-  const savedLon = j.profile.location_lng;
-
-  if (savedLat && savedLon) {
-    document.getElementById("lat").value = savedLat;
-    document.getElementById("lon").value = savedLon;
-
-    // Load mapbox token if not loaded yet
-    if (!MAPBOX_TOKEN) await loadToken();
-
-    // Clear previous map
-    document.getElementById("map").innerHTML = "";
-
-    // Draw the map at saved location
-    mapboxgl.accessToken = MAPBOX_TOKEN;
-
-    const map = new mapboxgl.Map({
-      container: "map",
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: [savedLon, savedLat],
-      zoom: 14
-    });
-
-    new mapboxgl.Marker({ color: "red" })
-      .setLngLat([savedLon, savedLat])
-      .addTo(map);
-  }
+  return container;
 }
 
+   let ACTIVE_BOOKING_ID = null;
 
-document.getElementById('logout').addEventListener('click', ()=>{
-  localStorage.clear(); 
-  location.href='index.html';
-});
+async function startLiveUpdates(booking_id) {
+  ACTIVE_BOOKING_ID = booking_id;
 
-load();
-/* ----------------------------------------------------------
-   END OF YOUR OLD SCRIPT
----------------------------------------------------------- */
+  setInterval(async () => {
+    if (!ACTIVE_BOOKING_ID) return;
 
+    if (!navigator.geolocation) return;
 
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const token = localStorage.getItem("token");
 
-/* ----------------------------------------------------------
-   NEW FUNCTIONALITY – MAP, UPDATE & DELETE LOCATION
----------------------------------------------------------- */
+      await fetch("/api/serviceman/live-location", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ lat, lng, booking_id })
+      });
 
-// Load Mapbox token from backend
-let MAPBOX_TOKEN = "";
+    });
 
-async function loadToken() {
-  const res = await fetch("/api/mapbox-token");
-  const j = await res.json();
-  MAPBOX_TOKEN = j.token;
+  }, 3000); // Every 3 seconds
 }
-loadToken();
 
+      function createPendingCard(booking) {
+        const id = booking.id;
+        const container = document.createElement('div');
+        container.className = 'border rounded p-3 mb-3 shadow-sm';
+        container.id = 'req-' + id;
 
-// Detect and Update Location
-document.getElementById("btnDetect").addEventListener("click", () => {
-  if (!navigator.geolocation) return alert("Geolocation not supported");
+        const userName = booking.user?.full_name || 'Unknown';
+        const phone = booking.user?.phone || 'N/A';
+        const service = booking.service_type || 'General Service';
+        const eta = Math.round(booking.eta_predicted || 0);
 
-  navigator.geolocation.getCurrentPosition(async pos => {
+        container.innerHTML = `
+          <h5>${escapeHtml(service)}</h5>
+          <p><strong>User:</strong> ${escapeHtml(userName)}</p>
+          <p><strong>Phone:</strong> ${escapeHtml(phone)}</p>
+          <p class="small-muted"><strong>ETA:</strong> ${eta} min</p>
+          <p class="small-muted"><strong>Location:</strong> ${booking.lat}, ${booking.lng}</p>
 
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
+          <div class="d-flex gap-2 mt-2">
+            <button class="btn btn-book btn-sm" onclick="acceptRequest('${id}')">Accept</button>
+            <button class="btn btn-cancel btn-sm" onclick="rejectRequest('${id}')">Reject</button>
+          </div>
+        `;
 
-    document.getElementById("lat").value = lat;
-    document.getElementById("lon").value = lon;
+        return container;
+      }
 
-    // Clear old map before creating a new one
-    document.getElementById("map").innerHTML = "";
+      // small HTML escape
+      function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
 
-    // Show Map
-    mapboxgl.accessToken = MAPBOX_TOKEN;
+      /*********************
+       * Load accepted jobs (one-time load on page load; not polled)
+       *********************/
+      async function loadAccepted() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
 
-    const map = new mapboxgl.Map({
-      container: "map",
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: [lon, lat],
-      zoom: 14
-    });
+        try {
+          const r = await fetch('/api/serviceman/accepted', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          if (!r.ok) {
+            console.warn('accepted fetch failed', r.status);
+            document.getElementById('acceptedJobs').innerHTML = '<p class="text-muted">Failed to load accepted jobs.</p>';
+            return;
+          }
 
-    new mapboxgl.Marker({ color: "red" })
-      .setLngLat([lon, lat])
-      .addTo(map);
+          const j = await r.json();
+          if (!j.success) {
+            document.getElementById('acceptedJobs').innerHTML = '<p class="text-muted">No accepted jobs.</p>';
+            return;
+          }
 
-    // Update location in Supabase
-    const token = localStorage.getItem("token");
+          const box = document.getElementById('acceptedJobs');
+          box.innerHTML = '';
 
-    const res = await fetch("/api/serviceman/update-location", {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer " + token,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ lat, lon })
-    });
+          for (const booking of j.requests) {
+            const el = createAcceptedCard(booking);
+            box.appendChild(el);
 
-    const j = await res.json();
+            // draw route for this accepted booking (use saved serviceman coords in booking if available,
+            // otherwise rely on /api/me current location)
+            setTimeout(() => {
+              // draw only if booking has lat/lng user and serviceman lat/lng available or fallback to /api/me
+              drawRouteForAccepted(booking);
+            }, 200);
+          }
 
-    if (j.success) {
-      alert("Location Updated Successfully!");
-    } else {
-      alert("Failed: " + JSON.stringify(j.error));
-    }
+        } catch (e) {
+          console.error('loadAccepted err', e);
+          document.getElementById('acceptedJobs').innerHTML = '<p class="text-muted">Failed to load accepted jobs.</p>';
+        }
+      }
 
-  }, () => {
-    alert("Location access denied.");
-  });
-});
+      // call once on load
+      loadAccepted();
 
+      /*********************
+       * Load pending requests (polled)
+       *********************/
+      let pendingPoll = null;
+      async function loadPending() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
 
-// Delete Serviceman Location
-document.getElementById("btnDelete").addEventListener("click", async () => {
+        try {
+          const r = await fetch('/api/serviceman/requests', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          if (!r.ok) {
+            console.warn('pending fetch failed', r.status);
+            document.getElementById('pendingRequests').innerHTML = '<p class="text-muted">Failed to load requests.</p>';
+            return;
+          }
+
+          const j = await r.json();
+          if (!j.success) {
+            document.getElementById('pendingRequests').innerHTML = '<p class="text-muted">No requests.</p>';
+            return;
+          }
+
+          // filter out bookings that are already accepted (server-side accepted are returned in accepted API,
+          // but to be safe skip any with status !== 'pending')
+          const box = document.getElementById('pendingRequests');
+          box.innerHTML = '';
+
+          for (const booking of j.requests) {
+            if (booking.status && booking.status !== 'pending') continue;
+            // do not include bookings already present in acceptedJobs (avoid duplicates)
+            if (document.getElementById('acc-' + booking.id)) continue;
+
+            const el = createPendingCard(booking);
+            box.appendChild(el);
+          }
+
+        } catch (e) {
+          console.error('loadPending err', e);
+          document.getElementById('pendingRequests').innerHTML = '<p class="text-muted">Failed to load requests.</p>';
+        }
+      }
+
+      // start polling every 5s for pending requests only
+      loadPending();
+      pendingPoll = setInterval(loadPending, 5000);
+
+      /*********************
+       * Accept / Reject handlers
+       *********************/
+      async function acceptRequest(id) {
+        const token = localStorage.getItem('token');
+        if (!token) return alert('Not logged in');
+
+        try {
+          const r = await fetch('/api/serviceman/update-status', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, status: 'accepted' })
+          });
+          if (!r.ok) {
+            const txt = await r.text();
+            console.error('accept failed', r.status, txt);
+            return alert('Failed to accept request');
+          }
+          const j = await r.json();
+          if (!j.success) {
+            console.error('accept err json', j);
+            return alert('Failed to accept request');
+          }
+
+          // remove the pending card
+          const pendingEl = document.getElementById('req-' + id);
+          if (pendingEl) pendingEl.remove();
+
+          // add to accepted container (j.booking contains updated booking with serviceman_lat/lng if server set it)
+          const accBox = document.getElementById('acceptedJobs');
+          const newCard = createAcceptedCard(j.booking);
+          accBox.prepend(newCard); // put on top
+
+          // draw route for the newly accepted booking
+          setTimeout(() => drawRouteForAccepted(j.booking), 200);
+
+        } catch (e) {
+          console.error('acceptRequest err', e);
+          alert('Error accepting request');
+        }
+      }
+
+      async function rejectRequest(id) {
+        const token = localStorage.getItem('token');
+        if (!token) return alert('Not logged in');
+
+        try {
+          const r = await fetch('/api/serviceman/update-status', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, status: 'rejected' })
+          });
+          if (!r.ok) {
+            console.error('reject failed', r.status);
+            return alert('Failed to reject request');
+          }
+          const j = await r.json();
+          if (!j.success) return alert('Failed to reject request');
+
+          // remove pending card
+          const pendingEl = document.getElementById('req-' + id);
+          if (pendingEl) pendingEl.remove();
+
+        } catch (e) {
+          console.error('rejectRequest err', e);
+          alert('Error rejecting request');
+        }
+      }
+
+      /*********************
+       * Route drawing (clean route line only)
+       * - For accepted booking: prefer serviceman_lat/lng stored in booking
+       * - If not present, fallback to current /api/me location for serviceman
+       *********************/
+      async function drawRouteForAccepted(booking) {
+        try {
+          if (!MAPBOX_TOKEN) await loadToken();
+          mapboxgl.accessToken = MAPBOX_TOKEN;
+
+          const id = booking.id;
+          const containerId = 'map-' + id;
+          const el = document.getElementById(containerId);
+          if (!el) return;
+
+          // ensure container is empty
+          el.innerHTML = '';
+
+          // get serviceman coords: prefer booking.serviceman_lat/lng else fetch /api/me
+          let smLat = booking.serviceman_lat;
+          let smLng = booking.serviceman_lng;
+
+          if ((smLat === null || smLat === undefined || smLng === null || smLng === undefined)) {
+            // fetch current serviceman profile
+            const token = localStorage.getItem('token');
+            const r = await fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token }});
+            if (r.ok) {
+              const mj = await r.json();
+              smLat = mj.profile.location_lat;
+              smLng = mj.profile.location_lng;
+            }
+          }
+
+          // user coords (destination)
+          const userLat = Number(booking.lat);
+          const userLng = Number(booking.lng);
+
+          if (smLat === null || smLng === null || smLat === undefined || smLng === undefined || Number.isNaN(userLat) || Number.isNaN(userLng)) {
+            // cannot draw route without coordinates
+            el.innerHTML = '<p class="text-muted">Route unavailable (missing coordinates)</p>';
+            return;
+          }
+
+          const map = new mapboxgl.Map({
+            container: containerId,
+            style: "mapbox://styles/mapbox/streets-v12",
+            center: [Number(smLng), Number(smLat)],
+            zoom: 12
+          });
+
+          // fetch directions (geojson)
+          const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${smLng},${smLat};${userLng},${userLat}?geometries=geojson&overview=full&access_token=${MAPBOX_TOKEN}`;
+
+          const dr = await fetch(directionsUrl);
+          if (!dr.ok) {
+            console.error('directions fetch failed', dr.status);
+            el.innerHTML = '<p class="text-muted">Route unavailable (directions error)</p>';
+            return;
+          }
+          const dj = await dr.json();
+          if (!dj.routes || !dj.routes[0] || !dj.routes[0].geometry) {
+            el.innerHTML = '<p class="text-muted">Route unavailable</p>';
+            return;
+          }
+
+          const routeGeo = dj.routes[0].geometry;
+
+          map.on('load', () => {
+            // add route source
+            if (map.getSource('route-' + id)) {
+              map.removeLayer('route-line-' + id);
+              map.removeSource('route-' + id);
+            }
+
+            map.addSource('route-' + id, {
+              type: 'geojson',
+              data: { type: 'Feature', geometry: routeGeo }
+            });
+
+            map.addLayer({
+              id: 'route-line-' + id,
+              type: 'line',
+              source: 'route-' + id,
+              layout: { 'line-join': 'round', 'line-cap': 'round' },
+              paint: { 'line-color': '#007AFF', 'line-width': 5 }
+            });
+
+            // Fit to bounds (route bbox)
+            try {
+              const coords = routeGeo.coordinates;
+              const lats = coords.map(c => c[1]);
+              const lngs = coords.map(c => c[0]);
+              const minLat = Math.min(...lats);
+              const maxLat = Math.max(...lats);
+              const minLng = Math.min(...lngs);
+              const maxLng = Math.max(...lngs);
+              map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 30 });
+            } catch (e) {
+              console.warn('fitBounds error', e);
+            }
+          });
+
+        } catch (e) {
+          console.error('drawRouteForAccepted err', e);
+        }
+      }
+async function sendBill(bookingId) {
+  document.getElementById("billBookingId").value = bookingId;
+
   const token = localStorage.getItem("token");
 
-  const res = await fetch("/api/serviceman/delete-location", {
-    method: "POST",
+  // 1️⃣ Fetch accepted bookings
+  const res = await fetch("/api/serviceman/accepted", {
     headers: { "Authorization": "Bearer " + token }
+  });
+  const data = await res.json();
+
+  const booking = data.requests.find(b => b.id === bookingId);
+  if (!booking) {
+    alert("Booking not found!");
+    return;
+  }
+
+  // 2️⃣ Fetch serviceman profile to get base_cost + location
+  const meRes = await fetch("/api/me", {
+    headers: { "Authorization": "Bearer " + token }
+  });
+  const me = await meRes.json();
+
+  const baseCost = Number(me.profile.base_cost || 0);
+  let techLat = booking.serviceman_lat || me.profile.location_lat;
+  let techLng = booking.serviceman_lng || me.profile.location_lng;
+
+  if (!techLat || !techLng) {
+    alert("Please update your live location before sending bill.");
+    return;
+  }
+
+  // 3️⃣ Prepare ML payload
+  const mlPayload = {
+    Service_Name: booking.service_type,
+    User_Lat: booking.lat,
+    User_Lng: booking.lng,
+    Tech_Lat: techLat,
+    Tech_Lng: techLng,
+    Base_Charge: baseCost,
+    Spare_Part_Price: 0
+  };
+
+  // 4️⃣ Call ML API
+  const mlRes = await fetch("http://127.0.0.1:9000/predict_price", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(mlPayload)
+  });
+
+  const ml = await mlRes.json();
+
+  if (ml.status !== "success") {
+    alert("AI Billing failed!");
+    return;
+  }
+
+  // 5️⃣ Fill the modal UI
+  document.getElementById("aiDistance").innerText = ml.Distance_KM + " km";
+  document.getElementById("aiETA").innerText = ml.ETA_Minutes + " mins";
+  document.getElementById("aiSurge").innerText = ml.Handling_Surge;
+  document.getElementById("aiBase").innerText = ml.Base_Charge;
+  document.getElementById("aiFinalPrice").innerText = ml.Final_Price;
+
+  // Save the predicted final price
+  document.getElementById("billFinalPrice").value = ml.Final_Price;
+
+  // Reset user input fields
+  document.getElementById("billSpare").value = "";
+  document.getElementById("billDesc").value = "";
+
+  // 6️⃣ Show modal
+  const modal = new bootstrap.Modal(document.getElementById("billModal"));
+  modal.show();
+}
+
+
+async function submitBill() {
+  const bookingId = document.getElementById("billBookingId").value;
+  const finalPrice = Number(document.getElementById("billFinalPrice").value);
+  const spare = Number(document.getElementById("billSpare").value || 0);
+  const description = document.getElementById("billDesc").value;
+
+  const totalAmount = finalPrice + spare;
+
+  const token = localStorage.getItem("token");
+
+  const res = await fetch("/api/send-bill", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      booking_id: bookingId,
+      base_price: finalPrice,
+      extra_charges: spare,
+      description
+    })
   });
 
   const j = await res.json();
 
   if (j.success) {
-    alert("Location Removed!");
-    document.getElementById("lat").value = "";
-    document.getElementById("lon").value = "";
-    document.getElementById("map").innerHTML = "";
+    alert("Bill Sent Successfully!");
+
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById("billModal")).hide();
+
+    // Disable "Send Bill" button in the card
+    const card = document.getElementById("acc-" + bookingId);
+    if (card) {
+      const btn = card.querySelector(".btn-primary");
+      if (btn) {
+        btn.textContent = "Bill Sent ✓";
+        btn.disabled = true;
+      }
+    }
+
   } else {
-    alert("Error: " + JSON.stringify(j.error));
+    alert("Error: " + j.error);
   }
-});
-</script>
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+}
 
 
-</body></html>
+
+
+      /*********************
+       * Google Maps open
+       * Arguments:
+       *  - servicemanLat, servicemanLng, userLat, userLng
+       * If serviceman coords missing, fallback to current location fields on page
+       *********************/
+      function openInGoogleMaps(servicemanLat, servicemanLng, userLat, userLng) {
+        // if function invoked with parameters encoded (from onclick string),
+        // they might be strings - ensure decode
+        const smLat = servicemanLat || document.getElementById('lat').value || '';
+        const smLng = servicemanLng || document.getElementById('lon').value || '';
+        const uLat = userLat;
+        const uLng = userLng;
+
+        let url = '';
+        if (smLat && smLng) {
+          url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(smLat + ',' + smLng)}&destination=${encodeURIComponent(uLat + ',' + uLng)}&travelmode=driving`;
+        } else {
+          url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(uLat + ',' + uLng)}`;
+        }
+        window.open(url, '_blank');
+      }
+
+      // expose functions to global scope for inline onclick usage
+      window.acceptRequest = acceptRequest;
+      window.rejectRequest = rejectRequest;
+      window.openInGoogleMaps = openInGoogleMaps;
+      setInterval(checkBillsStatus, 5000);
+
+async function checkBillsStatus() {
+  const token = localStorage.getItem("token");
+
+  // Get all accepted jobs
+  const jobCards = document.querySelectorAll("[id^='acc-']");
+
+  for (const card of jobCards) {
+    const bookingId = card.id.replace("acc-", "");
+
+    const res = await fetch("/api/bill/" + bookingId, {
+      headers: { "Authorization": "Bearer " + token }
+    });
+
+    if (!res.ok) continue;
+
+    const j = await res.json();
+    if (!j.success) continue;
+
+    if (j.bill.status === "paid") {
+      // Update UI
+      const btn = card.querySelector(".btn-primary");
+      if (btn) {
+        btn.outerHTML = `<span class="text-success fw-bold">PAID ✔</span>`;
+      }
+    }
+  }
+}
+
+
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

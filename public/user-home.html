@@ -5,784 +5,1172 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>User Home</title>
+
+    <!-- Mapbox -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- Mapbox Geocoder (search box) -->
+    <link
+      rel="stylesheet"
+      href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"
+    />
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+
+    <!-- Bootstrap + icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;600;700;900&display=swap" rel="stylesheet">
-   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 
+    <style>
+      /* Your existing small helper styles + new booking styles */
+      .req-map { width:100%; height:250px; border-radius:8px; overflow:hidden; margin-top:10px; }
+      .accepted-section { margin-bottom: 1rem; }
+      .pending-section { margin-top: 1rem; }
+      .card .small-muted { font-size:0.9rem; color:#666; }
+
+      /* Bookings modal styles */
+      .booking-card {
+        border: 1px solid #e6e6e6;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      }
+      .booking-meta { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+      .booking-map { width: 200px; height: 200px; border-radius:8px; overflow:hidden; background:#f3f3f3; }
+      .booking-info { flex: 1; min-width:220px; }
+      .status-badge { font-weight:600; padding:6px 10px; border-radius:12px; font-size:0.9rem; }
+      .status-pending { background:#fff4e5; color:#b36b00; border:1px solid #ffd9a8; }
+      .status-accepted { background:#e8f6ff; color:#0077cc; border:1px solid #cfeeff; }
+      .status-onway { background:#e9ffef; color:#008b4a; border:1px solid #bff0c9; }
+      .status-completed { background:#f0f0f0; color:#666; border:1px solid #ddd; }
+      .small-muted { font-size:0.9rem; color:#666; }
+
+      /* ensure maps inside modal have proper z-index for mapbox controls */
+      .mapboxgl-ctrl-top-right { z-index: 1100; }
+      .mapboxgl-ctrl-top-left { z-index: 1100; }
+
+      /* geocoder container styling so it sits above the map */
+      #geocoder { width: 100%; margin-bottom: 8px; }
+      .geocoder-wrapper { position: relative; z-index: 1050; } /* above other modal elements */
+    </style>
   </head>
+
   <body>
-<!-- navigation start -->
- <nav class="navbar navbar-expand-sm bg-black sticky-top py-1">
+    <!-- navigation start -->
+    <nav class="navbar navbar-expand-sm bg-black sticky-top py-1">
       <div class="container navedit">
-        <a class="navbar-brand text-white" href="#"
-          ><span class="display-6 fw-bold">Fix</span><span class="display-5">Route</span></a
-        >
-        <button
-          class="bi bi-list d-lg-none d-md-none"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarSupportedContent"
-          aria-controls="navbarSupportedContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        ></button>
+        <a class="navbar-brand text-white" href="#"><span class="display-6 fw-bold">Fix</span><span class="display-5">Route</span></a>
+        <button class="bi bi-list d-lg-none d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"></button>
+
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
              <li class="nav-item">
-              <a class="nav-link"  data-bs-toggle="modal" data-bs-target="#staticBackdrop" >PROFILE</a>
+              <a class="nav-link" data-bs-toggle="modal" data-bs-target="#staticBackdrop">PROFILE</a>
             </li>
-           
+
+            <!-- BOOKINGS will be handled by JS to load contents -->
+             <li class="nav-item">
+              <a class="nav-link" id="openBookings">BOOKINGS</a>
+            </li>
 
              <li class="nav-item">
-              <a class="nav-link"  id="logout" >LOGOUT</a>
+              <a class="nav-link" id="logout">LOGOUT</a>
             </li>
-           
-         
           </ul>
-         
         </div>
-        
       </div>
     </nav>
+    <!-- navigation end -->
 
-<!-- navigation end -->
+    <!-- main section start -->
+    <div class="container my-4">
+      <p class="fs-4 fw-normal"><span id="userNameNav"></span> facing a breakdown? We’re nearby!</p>
 
-
-
-
-
-<!-- main section start -->
-
-<div class="container my-4">
-  
-<p class="fs-4 fw-normal"><span id="userName"></span> facing a breakdown? We’re nearby!</p>
-
-<div id="carouselExample" class="carousel slide custom-carousel">
-  <div class="carousel-inner">
-    <div class="carousel-item active">
-      <img src="assets/ChatGPT Image Nov 18, 2025 at 12_27_41 PM.png" class="d-block w-100" alt="...">
-      <div class="carousel-caption d-none d-md-block">
-        <p class="display-3 fw-bold">Emergency Mechanic<p>
-        <p class="fs-4">Quick help anytime, Anywhere</p>
-      </div>
-    </div>
-    <div class="carousel-item">
-      <img src="..." class="d-block w-100" alt="...">
-    </div>
-    <div class="carousel-item">
-      <img src="..." class="d-block w-100" alt="...">
-    </div>
-  </div>
-  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
-    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Previous</span>
-  </button>
-  <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Next</span>
-  </button>
-</div>
-<!-- row 1 start -->
-   <div class="row">
-        <div class="col-sm-12 col-md-3 col-lg-3">
-          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
-  <div class="card-body shadow-lg">
-    
-    <p class="card-text fs-5 text-capitalize">FUEL DELIVERY</p>
-    <p class="card-text fs-6 text-secondary">ANYWHERE ANYTIME</p>
-    <div class="card-btn">
-    <button class="btn btn-book">BOOK NOW</button>
-    <img src="assets/gas-station.png" class="card-img" alt="">
-
-    </div>
-  </div>
-</div>
+      <div id="carouselExample" class="carousel slide custom-carousel">
+        <div class="carousel-inner">
+          <div class="carousel-item active">
+            <img src="assets/ChatGPT Image Nov 18, 2025 at 12_27_41 PM.png" class="d-block w-100" alt="...">
+            <div class="carousel-caption d-none d-md-block">
+              <p class="display-3 fw-bold">Emergency Mechanic</p>
+              <p class="fs-4">Quick help anytime, Anywhere</p>
+            </div>
+          </div>
         </div>
-
-        <div class="col-sm-12 col-md-3 col-lg-3">
-          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
-  <div class="card-body shadow-lg">
-    <p class="card-text fs-5 text-uppercase">Tyre Replacement</p>
-    <p class="card-text fs-6 text-secondary">On-the-Spot Help</p>
-    <div class="card-btn">
-    <button class="btn btn-book">BOOK NOW</button>
-    <img src="assets/racing.png" class="card-img" alt="">
-
-    </div>
-    
-  </div>
-</div>
-        </div>
-
-         <div class="col-sm-12 col-md-3 col-lg-3">
-          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
-  <div class="card-body shadow-lg">
-   <p class="card-text fs-5 text-uppercase">Battery Service</p>
-    <p class="card-text fs-6 text-secondary">Jump Start & Replace</p>
-    <div class="card-btn">
-    <button class="btn btn-book">BOOK NOW</button>
-    <img src="assets/car-battery.png" class="card-img" alt="">
-
-    </div>
-  </div>
-</div>
-        </div>
-
-        <div class="col-sm-12 col-md-3 col-lg-3">
-          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
-  <div class="card-body shadow-lg">
-      <p class="card-text fs-5 text-uppercase">Mechanic</p>
-    <p class="card-text fs-6 text-secondary">For Cars & Bikes</p>
-    <div class="card-btn">
-    <button class="btn btn-book">BOOK NOW</button> 
-    <img src="assets/automobile-with-wrench.png" class="card-img" alt="">
-
-    </div>
-  </div>
-        </div>
-      </div>
-      </div>
-      <!-- row 1 end -->
-<!-- row 2 start -->
-<div class="row">
-        <div class="col-sm-12 col-md-3 col-lg-3">
-          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
-  <div class="card-body shadow-lg">
-    
-    <p class="card-text fs-5 text-capitalize">TOW ASSIST</p>
-    <p class="card-text fs-6 text-secondary">WHEREVER YOU ARE</p>
-    <div class="card-btn">
-    <button class="btn btn-book" data-service="Tow Assist">BOOK NOW</button>
-    <img src="assets/tow-truck.png" class="card-img" alt="">
-
-    </div>
-  </div>
-</div>
-        </div>
-
-        <div class="col-sm-12 col-md-3 col-lg-3">
-          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
-  <div class="card-body shadow-lg">
-    <p class="card-text fs-5 text-uppercase">TWO-WHEELER HELP</p>
-    <p class="card-text fs-6 text-secondary">ON THE GO</p>
-    <div class="card-btn">
-    <button class="btn btn-book">BOOK NOW</button>
-    <img src="assets/toolbox.png" class="card-img" alt="">
-
-    </div>
-    
-  </div>
-</div>
-        </div>
-
-         <div class="col-sm-12 col-md-3 col-lg-3">
-          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
-  <div class="card-body shadow-lg">
-   <p class="card-text fs-5 text-uppercase">Battery Service</p>
-    <p class="card-text fs-6 text-secondary">Jump Start & Replace</p>
-    <div class="card-btn">
-    <button class="btn btn-book">BOOK NOW</button>
-    <img src="assets/car-battery.png" class="card-img" alt="">
-
-    </div>
-  </div>
-</div>
-        </div>
-
-        <div class="col-sm-12 col-md-3 col-lg-3">
-          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
-  <div class="card-body shadow-lg">
-      <p class="card-text fs-5 text-uppercase">Mechanic</p>
-    <p class="card-text fs-6 text-secondary">For Cars & Bikes</p>
-    <div class="card-btn">
-    <button class="btn btn-book">BOOK NOW</button> 
-    <img src="assets/automobile-with-wrench.png" class="card-img" alt="">
-
-    </div>
-  </div>
-        </div>
-      </div>
-      </div>
-
-<!-- row 2 end -->
-
-
-
-
-</div>
-
-<!-- main section end -->
-
-
-  <!-- modal section login start -->
-<!-- Button trigger modal -->
-<!-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-  Launch static backdrop modal
-</button> -->
-
-<!-- Modal -->
-<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        
-        <h1 class="modal-title fs-5" id="staticBackdropLabel">PROFILE</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-         <pre id="profile" class="modal-profiledetails">
-         </pre>
-      </div>
-      
-    </div>
-  </div>
-</div>
-
-
-
-
-
-
-
-
-  <!-- modal section end -->
-
-
-  <!-- modal for cards start -->
-   <!-- UPDATED MULTI-STEP MODAL -->
-<div class="modal fade" id="serviceModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title">Book Service</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <!-- STEP 1: USER DETAILS -->
-        <div id="step1">
-          <label class="mt-2">Service Name</label>
-          <input type="text" id="serviceName" class="form-control" readonly>
-
-          <label class="mt-3">Your Name</label>
-          <input type="text" id="userName" class="form-control">
-
-          <label class="mt-3">Mobile</label>
-          <input type="text" id="userMobile" class="form-control">
-
-          <label class="mt-3">Your Location</label>
-          <input type="text" id="userLocation" class="form-control" readonly>
-
-          <div id="map" style="height:250px; background:#eee; border-radius:10px; margin-top:15px;"></div>
-        </div>
-
-        <!-- STEP 2: ML-PREDICTED TECHNICIANS -->
-        <div id="step2" style="display:none;">
-          <h4 class="mb-3 text-center">Servicemen Near You</h4>
-
-          <!-- Injected by JS -->
-          <div id="techList" class="mx-4"></div>
-        </div>
-
-      </div>
-
-      <div class="modal-footer">
-
-        <!-- Step 1 Button -->
-        <button class="btn btn-book" id="btnSelectTech">
-          Select Technician
+        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
         </button>
-
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
       </div>
 
+      <!-- service cards (kept identical to your original markup) -->
+      <div class="row">
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+            <div class="card-body shadow-lg">
+              <p class="card-text fs-5 text-capitalize">FUEL DELIVERY</p>
+              <p class="card-text fs-6 text-secondary">ANYWHERE ANYTIME</p>
+              <div class="card-btn">
+                <button class="btn btn-book btn-open-service" data-service="Fuel Delivery">BOOK NOW</button>
+                <img src="assets/gas-station.png" class="card-img" alt="">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+            <div class="card-body shadow-lg">
+              <p class="card-text fs-5 text-uppercase">Tyre Replacement</p>
+              <p class="card-text fs-6 text-secondary">On-the-Spot Help</p>
+              <div class="card-btn">
+                <button class="btn btn-book btn-open-service" data-service="Tyre Replacement">BOOK NOW</button>
+                <img src="assets/racing.png" class="card-img" alt="">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+            <div class="card-body shadow-lg">
+              <p class="card-text fs-5 text-uppercase">Battery Service</p>
+              <p class="card-text fs-6 text-secondary">Jump Start & Replace</p>
+              <div class="card-btn">
+                <button class="btn btn-book btn-open-service" data-service="Battery Service">BOOK NOW</button>
+                <img src="assets/car-battery.png" class="card-img" alt="">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+            <div class="card-body shadow-lg">
+              <p class="card-text fs-5 text-uppercase">Mechanic</p>
+              <p class="card-text fs-6 text-secondary">For Cars & Bikes</p>
+              <div class="card-btn">
+                <button class="btn btn-book btn-open-service" data-service="Mechanic">BOOK NOW</button>
+                <img src="assets/automobile-with-wrench.png" class="card-img" alt="">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- second row kept -->
+      <div class="row">
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+            <div class="card-body shadow-lg">
+              <p class="card-text fs-5 text-capitalize">TOW ASSIST</p>
+              <p class="card-text fs-6 text-secondary">WHEREVER YOU ARE</p>
+              <div class="card-btn">
+                <button class="btn btn-book btn-open-service" data-service="Tow Assist">BOOK NOW</button>
+                <img src="assets/tow-truck.png" class="card-img" alt="">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+            <div class="card-body shadow-lg">
+              <p class="card-text fs-5 text-uppercase">TWO-WHEELER HELP</p>
+              <p class="card-text fs-6 text-secondary">ON THE GO</p>
+              <div class="card-btn">
+                <button class="btn btn-book btn-open-service" data-service="Two-Wheeler Help">BOOK NOW</button>
+                <img src="assets/toolbox.png" class="card-img" alt="">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+            <div class="card-body shadow-lg">
+              <p class="card-text fs-5 text-uppercase">breakdown?</p>
+              <p class="card-text fs-6 text-secondary">We’ll Fix It Right Away</p>
+              <div class="card-btn">
+                <button class="btn btn-book btn-open-service" data-service="Breakdown">BOOK NOW</button>
+                <img src="assets/car-breakdown.png" class="card-img" alt="">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-12 col-md-3 col-lg-3">
+          <div class="card border-0 text-center text-md-start m-4" data-aos="fade-left">
+            <div class="card-body shadow-lg">
+              <p class="card-text fs-5 text-uppercase">SOS Request</p>
+              <p class="card-text fs-6 text-secondary">Nearby Serviceman Notified</p>
+              <div class="card-btn">
+                <button class="btn btn-book btn-open-service" data-service="SOS Request">BOOK NOW</button>
+                <img src="assets/emergency-button.png" class="card-img" alt="">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
-  </div>
-</div>
+    <!-- main section end -->
 
-<!-- <div class="modal fade" id="serviceModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Book Service</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <label>Service Name</label>
-        <input type="text" id="serviceName" class="form-control" readonly>
-
-        <label>Your Name</label>
-        <input type="text" id="userName" class="form-control" readonly>
-
-        <label>Mobile</label>
-        <input type="text" id="userMobile" class="form-control" readonly>
-
-        <label>Your Location</label>
-        <input type="text" id="userLocation" class="form-control" readonly>
-        <div id="map"></div>
-
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-primary">Submit Booking</button>
+    <!-- PROFILE modal (unchanged) -->
+    <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="staticBackdropLabel">PROFILE</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+             <pre id="profile" class="modal-profiledetails"></pre>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div> -->
 
+    <!-- BOOKINGS modal (NEW) -->
+    <div class="modal fade" id="bookingsModal" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Your Bookings</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="bookingList">
+              <p class="text-muted">Loading bookings...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
+    <!-- multi-step booking modal -->
+    <div class="modal fade" id="serviceModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Book Service</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
 
-  <!-- modal for cards end -->
+          <div class="modal-body">
+            <div id="step1">
+              <label class="mt-2">Service Name</label>
+              <input type="text" id="serviceName" class="form-control" readonly>
 
+              <label class="mt-3">Your Name</label>
+              <input type="text" id="userNameInput" class="form-control">
 
-<!-- <script>
-async function load() {
-  const t = localStorage.getItem("token");
-  if (!t) return (location.href = "index.html");
+              <label class="mt-3">Mobile</label>
+              <input type="text" id="userMobileInput" class="form-control">
 
-  const r = await fetch("/api/me", {
-    headers: { Authorization: "Bearer " + t },
-  });
+              <label class="mt-3">Your Location</label>
+              <div class="d-flex gap-2 mb-2">
+                <input type="text" id="userLocation" class="form-control" readonly>
+                <button id="btnDetect" class="btn btn-outline-primary" type="button" title="Detect my location">⚲ Detect</button>
+              </div>
 
-  if (!r.ok) {
-    localStorage.clear();
-    return (location.href = "index.html");
-  }
+              <!-- SEARCH BOX ABOVE MAP -->
+              <div class="geocoder-wrapper">
+                <div id="geocoder"></div>
+              </div>
 
-  const j = await r.json();
+              <!-- MAP -->
+              <div id="map" style="height:300px; background:#eee; border-radius:10px; margin-top:8px;"></div>
 
-  // Show Name in top bar (or wherever)
-  document.getElementById("userName").textContent = j.profile.full_name;
+              <!-- SAVE + RESET BUTTONS -->
+              <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-book btn-sm" id="btnSaveLocation">💾 Save This Location</button>
+                <button class="btn btn-cancel btn-sm" id="btnResetLocation">Reset</button>
+              </div>
+              <small class="text-muted d-block mt-2">
+                You can detect, search, click on the map or drag the pin. Press Save to apply this location for booking.
+              </small>
+            </div>
 
-  // Show formatted details
-  document.getElementById("profile").innerHTML = `
-    <p><strong>Name:</strong> ${j.profile.full_name}</p>
-    <p><strong>Email:</strong> ${j.profile.email}</p>
-    <p><strong>Phone:</strong> ${j.profile.phone || "Not Added"}</p>
-  `;
-}
+            <div id="step2" style="display:none;">
+              <h4 class="mb-3 text-center">Servicemen Near You</h4>
+              <div id="techList" class="mx-4"></div>
+            </div>
+          </div>
 
-document.getElementById("logout").addEventListener("click", () => {
-  localStorage.clear();
-  location.href = "index.html";
-});
+          <div class="modal-footer">
+            <button class="btn btn-book" id="btnSelectTech">Select Technician</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- modal end -->
 
-load();
+    <!-- SCRIPTS -->
+     <script>
+      /*****************************************************************
+       * Unified script:
+       * - Keeps original behavior
+       * - Adds: Detect button, Search box (Mapbox Geocoder), draggable marker,
+       *   Save This Location and Reset
+       * - Option A: location is stored locally (SELECTED_LAT/LNG) and sent
+       *   to /api/book-service when booking.
+       *****************************************************************/
 
-// CLICK HANDLER FOR ALL BOOK NOW BUTTONS
-document.addEventListener("click", async function (e) {
-  if (e.target.classList.contains("btn-book")) {
+      // small helper
+      const safe = (v, def='') => (v === null || v === undefined) ? def : v;
 
-    // 1️⃣ SERVICE NAME
-    const service = e.target.getAttribute("data-service");
-    document.getElementById("serviceName").value = service;
+      // Mapbox token holder
+      let MAPBOX_TOKEN = "";
+      async function loadMapboxToken() {
+        if (MAPBOX_TOKEN) return MAPBOX_TOKEN;
+        try {
+          const r = await fetch('/api/mapbox-token');
+          const j = await r.json();
+          MAPBOX_TOKEN = j.token || '';
+          return MAPBOX_TOKEN;
+        } catch (e) {
+          console.error('mapbox token load err', e);
+          return '';
+        }
+      }
+      loadMapboxToken();
 
-    // 2️⃣ USER DETAILS FROM /api/me
-    const token = localStorage.getItem("token");
-    const r = await fetch("/api/me", {
-      headers: { Authorization: "Bearer " + token }
-    });
-    const j = await r.json();
+      /* -----------------------------
+         GLOBAL STATE (Option A - local storage until booking)
+      ------------------------------ */
+      let currentMap = null;
+      let currentMarker = null;
+      let geocoderControl = null;
 
-    document.getElementById("userName").value = j.profile.full_name;
-    document.getElementById("userMobile").value = j.profile.phone;
+      let SELECTED_LAT = null;
+      let SELECTED_LNG = null;
+      let USER_PICKED_LOCATION = false; // tracks whether user saved/picked a manual location
 
-    // 3️⃣ AUTO-DETECT LOCATION
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        document.getElementById("userLocation").value = `${lat}, ${lon}`;
-      }, err => {
-        document.getElementById("userLocation").value = "Location denied";
-      });
-    }
+      /* -----------------------------
+         LOAD USER PROFILE (Original)
+      ------------------------------ */
+      async function load() {
+        const t = localStorage.getItem("token");
+        if (!t) return (location.href = "index.html");
 
-    // 4️⃣ OPEN MODAL
-    const modal = new bootstrap.Modal(document.getElementById("serviceModal"));
-    modal.show();
-  }
-});
-
-
-
-</script> -->
-<!-- <script>
-async function load() {
-  const t = localStorage.getItem("token");
-  if (!t) return (location.href = "index.html");
-
-  const r = await fetch("/api/me", {
-    headers: { Authorization: "Bearer " + t },
-  });
-
-  if (!r.ok) {
-    localStorage.clear();
-    return (location.href = "index.html");
-  }
-
-  const j = await r.json();
-
-  // Show Name in top bar (or wherever)
-  document.getElementById("userName").textContent = j.profile.full_name;
-
-  // Show formatted details
-  document.getElementById("profile").innerHTML = `
-    <p><strong>Name:</strong> ${j.profile.full_name}</p>
-    <p><strong>Email:</strong> ${j.profile.email}</p>
-    <p><strong>Phone:</strong> ${j.profile.phone || "Not Added"}</p>
-  `;
-}
-
-document.getElementById("logout").addEventListener("click", () => {
-  localStorage.clear();
-  location.href = "index.html";
-});
-
-load();
-
-
-/* ---------------------------------------------------
-   MAPBOX ADDED: Load token once from backend
---------------------------------------------------- */
-
-let MAPBOX_TOKEN = "";
-
-async function loadMapToken() {
-  const res = await fetch("/api/mapbox-token");
-  const data = await res.json();
-  MAPBOX_TOKEN = data.token;
-}
-loadMapToken();
-
-
-/* ---------------------------------------------------
-   CLICK HANDLER FOR ALL BOOK NOW BUTTONS
-   (your original code preserved)
---------------------------------------------------- */
-
-document.addEventListener("click", async function (e) {
-  if (e.target.classList.contains("btn-book")) {
-
-    // 1️⃣ SERVICE NAME
-    const service = e.target.getAttribute("data-service");
-    document.getElementById("serviceName").value = service;
-
-    // 2️⃣ USER DETAILS FROM /api/me
-    const token = localStorage.getItem("token");
-    const r = await fetch("/api/me", {
-      headers: { Authorization: "Bearer " + token }
-    });
-    const j = await r.json();
-
-    document.getElementById("userName").value = j.profile.full_name;
-    document.getElementById("userMobile").value = j.profile.phone;
-
-    // 3️⃣ AUTO-DETECT LOCATION (ORIGINAL CODE)
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async pos => {
-
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-
-        document.getElementById("userLocation").value = `${lat}, ${lon}`;
-
-        /* ---------------------------------------------------
-           MAPBOX ADDED: Show map inside modal
-        --------------------------------------------------- */
-        
-        // Make sure token is ready
-        if (!MAPBOX_TOKEN) await loadMapToken();
-
-        mapboxgl.accessToken = MAPBOX_TOKEN;
-
-        const map = new mapboxgl.Map({
-          container: "map",
-          style: "mapbox://styles/mapbox/streets-v12",
-          center: [lon, lat],
-          zoom: 14
+        const r = await fetch("/api/me", {
+          headers: { Authorization: "Bearer " + t },
         });
 
-        // marker
-        new mapboxgl.Marker({ color: "red" })
-          .setLngLat([lon, lat])
-          .addTo(map);
-
-      }, err => {
-        document.getElementById("userLocation").value = "Location denied";
-      });
-    }
-
-    // 4️⃣ OPEN MODAL (your original code)
-    const modal = new bootstrap.Modal(document.getElementById("serviceModal"));
-    modal.show();
-  }
-});
-</script> -->
-<script>
-/* ---------------------------------------------------
-   LOAD USER PROFILE (Original)
---------------------------------------------------- */
-async function load() {
-  const t = localStorage.getItem("token");
-  if (!t) return (location.href = "index.html");
-
-  const r = await fetch("/api/me", {
-    headers: { Authorization: "Bearer " + t },
-  });
-
-  if (!r.ok) {
-    localStorage.clear();
-    return (location.href = "index.html");
-  }
-
-  const j = await r.json();
-
-  document.getElementById("userName").textContent = j.profile.full_name;
-
-  document.getElementById("profile").innerHTML = `
-    <p><strong>Name:</strong> ${j.profile.full_name}</p>
-    <p><strong>Email:</strong> ${j.profile.email}</p>
-    <p><strong>Phone:</strong> ${j.profile.phone || "Not Added"}</p>
-  `;
-}
-
-document.getElementById("logout").addEventListener("click", () => {
-  localStorage.clear();
-  location.href = "index.html";
-});
-
-load();
-
-/* ---------------------------------------------------
-   MAPBOX TOKEN LOAD
---------------------------------------------------- */
-let MAPBOX_TOKEN = "";
-let currentMap = null; // ⭐ IMPORTANT (fix map re-initialization)
-
-async function loadMapToken() {
-  const res = await fetch("/api/mapbox-token");
-  const data = await res.json();
-  MAPBOX_TOKEN = data.token;
-}
-loadMapToken();
-
-
-/* ---------------------------------------------------
-   CLICK HANDLER FOR BOOK NOW BUTTONS
---------------------------------------------------- */
-document.addEventListener("click", async function (e) {
-  if (e.target.classList.contains("btn-book")) {
-
-    const service = e.target.getAttribute("data-service") || "General Service";
-    document.getElementById("serviceName").value = service;
-
-    const token = localStorage.getItem("token");
-    const r = await fetch("/api/me", {
-      headers: { Authorization: "Bearer " + token }
-    });
-    const j = await r.json();
-
-    document.getElementById("userName").value = j.profile.full_name;
-    document.getElementById("userMobile").value = j.profile.phone;
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async pos => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-
-        document.getElementById("userLocation").value = `${lat}, ${lon}`;
-
-        if (!MAPBOX_TOKEN) await loadMapToken();
-        mapboxgl.accessToken = MAPBOX_TOKEN;
-
-        // ⭐ FIX — CLEAR OLD MAP BEFORE CREATING NEW ONE
-        const mapContainer = document.getElementById("map");
-        mapContainer.innerHTML = "";
-        mapContainer.classList.remove("mapboxgl-map");
-
-        if (currentMap) {
-          currentMap.remove();
+        if (!r.ok) {
+          localStorage.clear();
+          return (location.href = "index.html");
         }
 
+        const j = await r.json();
+
+        // top nav name (note: modal input ids were renamed to avoid duplicates)
+        const navNameEl = document.querySelector('#userNameNav');
+        if (navNameEl) navNameEl.textContent = j.profile.full_name || 'User';
+
+        document.getElementById("profile").innerHTML = `
+          <p><strong>Name:</strong> ${safe(j.profile.full_name)}</p>
+          <p><strong>Email:</strong> ${safe(j.profile.email)}</p>
+          <p><strong>Phone:</strong> ${safe(j.profile.phone || "Not Added")}</p>
+        `;
+
+        // prefill modal fields if present
+        const nameInput = document.getElementById('userNameInput');
+        const phoneInput = document.getElementById('userMobileInput');
+        if (nameInput) nameInput.value = j.profile.full_name || '';
+        if (phoneInput) phoneInput.value = j.profile.phone || '';
+      }
+
+      document.getElementById("logout").addEventListener("click", () => {
+        localStorage.clear();
+        location.href = "index.html";
+      });
+
+      load();
+
+      /* -----------------------------
+         Helper: update input + selected variables
+      ------------------------------ */
+      function setSelectedLocation(lat, lng) {
+        SELECTED_LAT = Number(lat);
+        SELECTED_LNG = Number(lng);
+        USER_PICKED_LOCATION = true;
+        const locEl = document.getElementById('userLocation');
+        if (locEl) locEl.value = `${SELECTED_LAT}, ${SELECTED_LNG}`;
+      }
+
+      /* -----------------------------
+         Initialize modal map (used when modal opens)
+         - places draggable marker
+         - attaches geocoder (search box) above map
+         - supports click-to-move-pin and drag
+      ------------------------------ */
+      async function initModalMap(initialLat, initialLng) {
+        await loadMapboxToken();
+        mapboxgl.accessToken = MAPBOX_TOKEN;
+
+        const fallback = { lat: 12.9716, lon: 77.5946 };
+
+        let lat = Number(initialLat);
+        let lng = Number(initialLng);
+        if (!isFinite(lat) || !isFinite(lng)) {
+          lat = fallback.lat;
+          lng = fallback.lon;
+        }
+
+        // If user has previously picked a manual location, prefer that (don't overwrite)
+        if (USER_PICKED_LOCATION && SELECTED_LAT != null && SELECTED_LNG != null) {
+          lat = SELECTED_LAT;
+          lng = SELECTED_LNG;
+        }
+
+        // Set current selected (will be saved on Save click)
+        const locEl = document.getElementById('userLocation');
+        if (!USER_PICKED_LOCATION) {
+          // only update the input if user hasn't explicitly picked a location
+          if (locEl) locEl.value = `${lat}, ${lng}`;
+        } else {
+          // ensure input shows saved coords
+          if (locEl && SELECTED_LAT != null && SELECTED_LNG != null) locEl.value = `${SELECTED_LAT}, ${SELECTED_LNG}`;
+        }
+
+        // Clear previous map
+        const mapContainer = document.getElementById('map');
+        mapContainer.innerHTML = '';
+        if (currentMap) {
+          try { currentMap.remove(); } catch(e) {}
+          currentMap = null;
+          currentMarker = null;
+        }
+
+        // Create the map
         currentMap = new mapboxgl.Map({
-          container: "map",
-          style: "mapbox://styles/mapbox/streets-v12",
-          center: [lon, lat],
+          container: 'map',
+          style: 'mapbox://styles/mapbox/streets-v12',
+          center: [lng, lat],
           zoom: 14
         });
 
-        new mapboxgl.Marker({ color: "red" })
-          .setLngLat([lon, lat])
+        // Add nav
+        currentMap.addControl(new mapboxgl.NavigationControl(), 'top-left');
+
+        // Create draggable marker
+        currentMarker = new mapboxgl.Marker({ color: 'red', draggable: true })
+          .setLngLat([lng, lat])
           .addTo(currentMap);
 
-      }, err => {
-        document.getElementById("userLocation").value = "Location denied";
+        currentMarker.on('dragend', () => {
+          const ll = currentMarker.getLngLat();
+          setSelectedLocation(ll.lat, ll.lng);
+        });
+
+        // Click map to move marker
+        currentMap.on('click', (e) => {
+          const lng2 = e.lngLat.lng;
+          const lat2 = e.lngLat.lat;
+          if (currentMarker) currentMarker.setLngLat([lng2, lat2]);
+          setSelectedLocation(lat2, lng2);
+        });
+
+        // Attach geocoder into #geocoder (make sure plugin loaded)
+        try {
+          if (typeof MapboxGeocoder === 'undefined') {
+            console.warn('MapboxGeocoder not available — ensure plugin script loaded');
+          } else {
+            // Remove old control if present
+            if (geocoderControl && currentMap) {
+              try { currentMap.removeControl(geocoderControl); } catch(e){}
+              geocoderControl = null;
+              document.getElementById('geocoder').innerHTML = '';
+            }
+
+            geocoderControl = new MapboxGeocoder({
+              accessToken: MAPBOX_TOKEN,
+              mapboxgl: mapboxgl,
+              marker: false,
+              placeholder: 'Search location',
+              proximity: { longitude: lng, latitude: lat }
+            });
+
+            // We want the geocoder DOM inside our #geocoder
+            const geocoderElem = geocoderControl.onAdd(currentMap);
+            const wrapper = document.getElementById('geocoder');
+            wrapper.innerHTML = '';
+            wrapper.appendChild(geocoderElem);
+
+            geocoderControl.on('result', (ev) => {
+              if (!ev || !ev.result || !ev.result.center) return;
+              const [lonR, latR] = ev.result.center;
+              if (currentMarker) currentMarker.setLngLat([lonR, latR]);
+              currentMap.flyTo({ center: [lonR, latR], zoom: 15 });
+              setSelectedLocation(latR, lonR);
+            });
+
+          }
+        } catch (e) {
+          console.error('geocoder init error', e);
+        }
+      }
+
+      /* -----------------------------
+         Buttons: Detect, Save, Reset
+      ------------------------------ */
+      // Detect button: updates marker to current geolocation
+      document.getElementById('btnDetect').addEventListener('click', () => {
+        if (!navigator.geolocation) return alert('Geolocation not supported by your browser');
+        navigator.geolocation.getCurrentPosition(pos => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          if (!currentMap) {
+            // init map at detected location
+            initModalMap(lat, lon);
+          } else {
+            currentMap.flyTo({ center: [lon, lat], zoom: 14 });
+            if (currentMarker) currentMarker.setLngLat([lon, lat]);
+            setSelectedLocation(lat, lon);
+          }
+        }, err => {
+          console.warn('geolocation error', err);
+          alert('Could not detect location');
+        }, { enableHighAccuracy: true, maximumAge: 60000 });
       });
-    }
 
-    const modal = new bootstrap.Modal(document.getElementById("serviceModal"));
-    modal.show();
-  }
-});
+      // Save location: stores into SELECTED_LAT/LNG and updates input (that's already done by setSelectedLocation)
+      document.getElementById('btnSaveLocation').addEventListener('click', () => {
+        if (SELECTED_LAT == null || SELECTED_LNG == null) return alert('No location selected');
+        // visual feedback
+        const btn = document.getElementById('btnSaveLocation');
+        btn.textContent = 'Saved ✓';
+        // ensure flag is set
+        USER_PICKED_LOCATION = true;
+        setTimeout(() => btn.textContent = '💾 Save This Location', 1200);
+        // (Under Option A we don't call the server here. Booking will include saved coords.)
+      });
 
-/* ---------------------------------------------------
-   STEP 2 — CALL BACKEND AND SHOW TECHNICIANS
---------------------------------------------------- */
-document.getElementById("btnSelectTech").addEventListener("click", async () => {
+      // Reset button: reset to geolocation if allowed, else to default center
+      document.getElementById('btnResetLocation').addEventListener('click', () => {
+        // clear saved selection
+        USER_PICKED_LOCATION = false;
+        SELECTED_LAT = null;
+        SELECTED_LNG = null;
+        const locEl = document.getElementById('userLocation');
+        if (locEl) locEl.value = '';
 
-  const service = document.getElementById("serviceName").value;
-  const location = document.getElementById("userLocation").value;
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(pos => {
+            initModalMap(pos.coords.latitude, pos.coords.longitude);
+          }, () => {
+            initModalMap(null, null);
+          });
+        } else {
+          initModalMap(null, null);
+        }
+      });
 
-  if (!location.includes(",")) {
-    return alert("Location not detected.");
-  }
+      /* -----------------------------
+         BOOK NOW flow — open modal and init map
+      ------------------------------ */
+      document.addEventListener('click', async function (e) {
+        const btn = e.target.closest('.btn-open-service');
+        if (!btn) return;
+        const service = btn.getAttribute('data-service') || 'General Service';
+        document.getElementById('serviceName').value = service;
 
-  const [lat, lng] = location.split(",").map(Number);
-  const token = localStorage.getItem("token");
+        // fetch user profile to prefill (modal inputs already set in load(), but refresh just in case)
+        const token = localStorage.getItem('token');
+        if (token) {
+          try {
+            const r = await fetch('/api/me', { headers: { Authorization: 'Bearer ' + token }});
+            if (r.ok) {
+              const j = await r.json();
+              const nameInput = document.getElementById('userNameInput');
+              const phoneInput = document.getElementById('userMobileInput');
+              if (nameInput) nameInput.value = j.profile.full_name || '';
+              if (phoneInput) phoneInput.value = j.profile.phone || '';
+              const navNameEl = document.getElementById('userNameNav');
+              if (navNameEl) navNameEl.textContent = j.profile.full_name || 'User';
+            }
+          } catch (err) {
+            console.warn('could not load /api/me', err);
+          }
+        }
 
-  const container = document.getElementById("techList");
-  container.innerHTML = '<div class="text-center p-3">Loading technicians...</div>';
+        // prefer user's saved manual location if present
+        if (USER_PICKED_LOCATION && SELECTED_LAT != null && SELECTED_LNG != null) {
+          initModalMap(SELECTED_LAT, SELECTED_LNG);
+        } else {
+          // try geolocation as initial position
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+              initModalMap(pos.coords.latitude, pos.coords.longitude);
+            }, () => {
+              initModalMap(null, null);
+            }, { enableHighAccuracy: true, maximumAge: 60000 });
+          } else {
+            initModalMap(null, null);
+          }
+        }
 
+        // show modal
+        const modal = new bootstrap.Modal(document.getElementById('serviceModal'));
+        modal.show();
+      });
+
+      /* -----------------------------
+         STEP 2 — CALL BACKEND AND SHOW TECHNICIANS
+         (requires that user saved or selected location)
+      ------------------------------ */
+      document.getElementById('btnSelectTech').addEventListener('click', async () => {
+        // Ensure location selected & saved to SELECTED_LAT/LNG
+        if (SELECTED_LAT == null || SELECTED_LNG == null) {
+          return alert('Please detect or pick a location and press Save This Location before proceeding.');
+        }
+
+        const service = document.getElementById('serviceName').value;
+        const token = localStorage.getItem('token');
+        const container = document.getElementById('techList');
+        container.innerHTML = '<div class="text-center p-3">Loading technicians...</div>';
+
+        try {
+          const resp = await fetch('/api/recommend-servicemen', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
+              service_type: service,
+              lat: SELECTED_LAT,
+              lng: SELECTED_LNG
+            })
+          });
+
+          const json = await resp.json();
+          const results = json.results || [];
+          container.innerHTML = '';
+
+          if (results.length === 0) {
+            container.innerHTML = '<p class="text-muted">No technicians nearby.</p>';
+            return;
+          }
+
+          results.forEach(t => {
+            container.innerHTML += `
+              <div class="border rounded p-3 my-2 shadow-sm servicemen-info d-flex justify-content-between align-items-center">
+                <div class="tech-info">
+                  <h5>${escapeHtml(t.full_name)} (⭐ ${escapeHtml(String(t.rating || 0))})</h5>
+                  <p>Distance: ${Number(t.distance_km || 0).toFixed(2)} km</p>
+                  <p>ETA: ${Math.round(t.eta_predicted || 0)} mins</p>
+                  <p>Base Cost: ₹${escapeHtml(String(t.base_cost || 0))}</p>
+
+                  <button class="btn btn-book select-tech"
+                          data-id="${t.id}"
+                          data-eta="${t.eta_predicted}"
+                          data-name="${escapeHtml(t.full_name)}">
+                    Select
+                  </button>
+                </div>
+                <div class="tech-img text-end">
+                  <img src="assets/mechanic.png" style="width:80px; height:80px;">
+                </div>
+              </div>
+            `;
+          });
+
+          // switch modal view
+          document.getElementById('step1').style.display = 'none';
+          document.getElementById('step2').style.display = 'block';
+          document.getElementById('btnSelectTech').style.display = 'none';
+          document.querySelector('#serviceModal .modal-title').innerText = 'Select Technician';
+
+        } catch (err) {
+          console.error('recommend servicemen err', err);
+          container.innerHTML = '<p class="text-danger">Error loading technicians.</p>';
+        }
+      });
+
+      /* -----------------------------
+         SELECT A TECHNICIAN → BOOK SERVICE (existing endpoint)
+      ------------------------------ */
+      document.getElementById('techList').addEventListener('click', async (e) => {
+        const btn = e.target.closest('.select-tech');
+        if (!btn) return;
+
+        const serviceman_id = btn.dataset.id;
+        const eta = Number(btn.dataset.eta) || 0;
+        const name = btn.dataset.name || 'Technician';
+
+        if (!confirm(`Confirm booking with ${name}?`)) return;
+
+        // ensure we have saved coordinates from earlier Save action (Option A)
+        if (SELECTED_LAT == null || SELECTED_LNG == null) {
+          return alert('Location missing — pick and Save the location first.');
+        }
+
+        const service = document.getElementById('serviceName').value;
+        const token = localStorage.getItem('token');
+
+        try {
+          const resp = await fetch('/api/book-service', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
+              serviceman_id,
+              service_type: service,
+              lat: SELECTED_LAT,
+              lng: SELECTED_LNG,
+              eta_predicted: eta
+            })
+          });
+
+          const json = await resp.json();
+          if (!json.success) {
+            console.error('booking failed response', json);
+            alert('Booking failed: ' + (json.error ? JSON.stringify(json.error) : 'Unknown'));
+            return;
+          }
+
+          alert('Booking Successful! ID: ' + json.booking.id);
+
+          // hide modal cleanly and reset modal DOM (fixes dark overlay issue)
+          const modalEl = document.getElementById('serviceModal');
+          const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+          modalInstance.hide();
+
+          // reset modal content AFTER hide transition completes (short delay to ensure removal)
+          setTimeout(() => {
+            // restore step1 UI
+            document.getElementById('step1').style.display = 'block';
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('btnSelectTech').style.display = 'block';
+            document.querySelector('#serviceModal .modal-title').innerText = 'Book Service';
+
+            // clear tech list
+            document.getElementById('techList').innerHTML = '';
+
+            // destroy map to free memory
+            if (currentMap) {
+              try { currentMap.remove(); } catch(e) {}
+              currentMap = null;
+              currentMarker = null;
+            }
+
+            // remove backdrop nodes and modal-open class if any
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = 'auto';
+          }, 300);
+
+        } catch (err) {
+          console.error('book-service err', err);
+          alert('Error booking service.');
+        }
+      });
+
+      /* -----------------------------
+         Reset modal DOM when hidden (user closes manually)
+      ------------------------------ */
+      document.getElementById('serviceModal').addEventListener('hidden.bs.modal', function () {
+        // restore step1 UI
+        try {
+          document.getElementById('step1').style.display = 'block';
+          document.getElementById('step2').style.display = 'none';
+          document.getElementById('btnSelectTech').style.display = 'block';
+          document.querySelector('#serviceModal .modal-title').innerText = 'Book Service';
+          document.getElementById('techList').innerHTML = '';
+        } catch (e) {}
+
+        if (currentMap) {
+          try { currentMap.remove(); } catch(e) {}
+          currentMap = null;
+          currentMarker = null;
+        }
+        // remove any orphan backdrops
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = 'auto';
+      });
+
+      /* -----------------------------
+         --- Bookings modal & live-tracking (unchanged logic, kept mostly same)
+         (I kept your original booking map/poll logic but ensured map creation uses MAPBOX_TOKEN)
+      ------------------------------ */
+
+      const POLL_INTERVAL = 2000; // ms
+      const bookingMaps = {};     // { bookingId: { map, userMarker, techMarker, intervalId } }
+
+      function statusBadge(status) {
+        const s = (status || '').toLowerCase();
+        if (s === 'pending') return `<span class="status-badge status-pending">Pending</span>`;
+        if (s === 'accepted') return `<span class="status-badge status-accepted">Accepted</span>`;
+        if (s === 'on_the_way' || s === 'onway' || s === 'coming' || s === 'on the way') return `<span class="status-badge status-onway">On the way</span>`;
+        if (s === 'completed') return `<span class="status-badge status-completed">Completed</span>`;
+        return `<span class="status-badge status-pending">${escapeHtml(status || 'Unknown')}</span>`;
+      }
+
+      // openBookings click handler
+      document.getElementById('openBookings').addEventListener('click', async () => {
+        const modalEl = document.getElementById('bookingsModal');
+        const modal = new bootstrap.Modal(modalEl);
+
+        await loadBookings(); // loads user bookings and initializes maps
+        modal.show();
+      });
+
+      // fetch user bookings
+      async function loadBookings() {
+        const token = localStorage.getItem('token');
+        const container = document.getElementById('bookingList');
+        if (!token) { container.innerHTML = '<p class="text-muted">Not logged in.</p>'; return; }
+
+        try {
+          const r = await fetch('/api/user/bookings', { headers: { Authorization: "Bearer " + token }});
+          if (!r.ok) { container.innerHTML = '<p class="text-muted">Failed to load bookings.</p>'; return; }
+          const j = await r.json();
+          const bookings = j.bookings || [];
+
+          // cleanup old maps/pollers
+          for (const id in bookingMaps) {
+            try { if (bookingMaps[id].intervalId) clearInterval(bookingMaps[id].intervalId); } catch(e){}
+            try { if (bookingMaps[id].map) bookingMaps[id].map.remove(); } catch(e){}
+          }
+          for (const k in bookingMaps) delete bookingMaps[k];
+
+          if (!bookings.length) { container.innerHTML = '<p class="text-muted">No bookings yet.</p>'; return; }
+
+          container.innerHTML = '';
+          for (const b of bookings) {
+            const id = b.id;
+            const serv = b.serviceman || null;
+            const servName = serv ? serv.full_name : (b.serviceman_name || 'Not Assigned');
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'booking-card d-flex gap-3 align-items-start';
+            wrapper.innerHTML = `
+              <div class="booking-info">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h6 class="mb-1">${escapeHtml(b.service_type || 'Service')}</h6>
+                    <div class="small-muted">Booking ID: ${escapeHtml(b.id)}</div>
+                  </div>
+                  <div>${statusBadge(b.status)}</div>
+                </div>
+
+                <div class="mt-2">
+                  <div><strong>Serviceman:</strong> ${escapeHtml(servName)}</div>
+                  <div class="small-muted"><strong>ETA:</strong> ${escapeHtml(String(Math.round(b.eta_predicted || 0)))} mins</div>
+                  <div class="small-muted"><strong>Booked at:</strong> ${escapeHtml(new Date(b.created_at).toLocaleString())}</div>
+                  <div class="small-muted"><strong>Address (coords):</strong> ${escapeHtml(String(b.lat) + ', ' + String(b.lng))}</div>
+                </div>
+                
+              </div>
+
+              <div style="min-width:220px;">
+                <div id="booking-map-${id}" class="booking-map"></div>
+              </div>
+            `;
+            container.appendChild(wrapper);
+
+            // init booking map
+            initBookingMap(b).catch(err => {
+              console.error('initBookingMap error', err);
+              const el = document.getElementById('booking-map-' + id);
+              if (el) el.innerHTML = '<p class="text-muted small">Map failed to initialize.</p>';
+            });
+            attachBillUIForBooking(b, wrapper);
+          
+          }
+        } catch (e) {
+          console.error('loadBookings err', e);
+          document.getElementById('bookingList').innerHTML = '<p class="text-muted">Failed to load bookings.</p>';
+        }
+        // Attach Billing UI (new)
+
+
+       
+}
+
+      
+
+      // initialize map for a booking and start polling
+      async function initBookingMap(booking) {
+        if (!MAPBOX_TOKEN) await loadMapboxToken();
+        mapboxgl.accessToken = MAPBOX_TOKEN;
+
+        const id = booking.id;
+        const containerId = 'booking-map-' + id;
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        el.innerHTML = '';
+
+        const userLat = Number(booking.lat);
+        const userLng = Number(booking.lng);
+        let techLat = booking.live_lat ?? (booking.serviceman ? booking.serviceman.location_lat : null) ?? booking.serviceman_lat ?? null;
+        let techLng = booking.live_lng ?? (booking.serviceman ? booking.serviceman.location_lng : null) ?? booking.serviceman_lng ?? null;
+
+        const center = (!isNaN(techLat) && !isNaN(techLng)) ? [Number(techLng), Number(techLat)] :
+                       (!isNaN(userLat) && !isNaN(userLng)) ? [Number(userLng), Number(userLat)] : [0,0];
+
+        const m = new mapboxgl.Map({
+          container: containerId,
+          style: "mapbox://styles/mapbox/streets-v12",
+          center,
+          zoom: 12,
+          interactive: false
+        });
+
+        // markers
+        let userMarker = null;
+        let techMarker = null;
+        if (!isNaN(userLat) && !isNaN(userLng)) {
+          userMarker = new mapboxgl.Marker({ color: '#0066ff' }).setLngLat([userLng, userLat]).addTo(m);
+        }
+        if (!isNaN(techLat) && !isNaN(techLng)) {
+          techMarker = new mapboxgl.Marker({ color: '#00b050' }).setLngLat([techLng, techLat]).addTo(m);
+        }
+
+        bookingMaps[id] = { map: m, userMarker, techMarker, intervalId: null };
+
+        const updateRoute = async (mapObj, fromLng, fromLat, toLng, toLat) => {
+          if (!mapObj || fromLng == null || fromLat == null || toLng == null || toLat == null) return;
+          try {
+            const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${fromLng},${fromLat};${toLng},${toLat}?geometries=geojson&overview=full&access_token=${MAPBOX_TOKEN}`;
+            const dr = await fetch(directionsUrl);
+            if (!dr.ok) return;
+            const dj = await dr.json();
+            if (!dj.routes || !dj.routes[0] || !dj.routes[0].geometry) return;
+            const geo = dj.routes[0].geometry;
+
+            const srcId = 'route-src-' + id;
+            const layerId = 'route-layer-' + id;
+            if (mapObj.getSource && mapObj.getSource(srcId)) {
+              try { mapObj.getSource(srcId).setData({ type: 'Feature', geometry: geo }); } catch (e) { }
+            } else {
+              try {
+                mapObj.addSource(srcId, { type: 'geojson', data: { type: 'Feature', geometry: geo } });
+                mapObj.addLayer({
+                  id: layerId,
+                  type: 'line',
+                  source: srcId,
+                  layout: { 'line-join': 'round', 'line-cap': 'round' },
+                  paint: { 'line-color': '#007AFF', 'line-width': 3 }
+                });
+              } catch (e) {}
+            }
+
+            // fit bounds
+            try {
+              const coords = geo.coordinates;
+              const lats = coords.map(c => c[1]);
+              const lngs = coords.map(c => c[0]);
+              const minLat = Math.min(...lats);
+              const maxLat = Math.max(...lats);
+              const minLng = Math.min(...lngs);
+              const maxLng = Math.max(...lngs);
+              mapObj.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 20, maxZoom: 15 });
+            } catch (e) {}
+          } catch (e) {
+            // ignore
+          }
+        };
+
+        const poller = async () => {
+          try {
+            const r = await fetch('/api/live-tracking/' + encodeURIComponent(id));
+            if (!r.ok) return;
+            const j = await r.json();
+            if (!j.success) return;
+
+            const uLat = (j.user_lat !== null && j.user_lat !== undefined) ? Number(j.user_lat) : null;
+            const uLng = (j.user_lng !== null && j.user_lng !== undefined) ? Number(j.user_lng) : null;
+            const tLat = (j.tech_lat !== null && j.tech_lat !== undefined) ? Number(j.tech_lat) : null;
+            const tLng = (j.tech_lng !== null && j.tech_lng !== undefined) ? Number(j.tech_lng) : null;
+            const status = j.status;
+
+            if (tLat != null && tLng != null) {
+              if (!bookingMaps[id].techMarker) bookingMaps[id].techMarker = new mapboxgl.Marker({ color: '#00b050' }).setLngLat([tLng, tLat]).addTo(m);
+              else bookingMaps[id].techMarker.setLngLat([tLng, tLat]);
+            }
+
+            if (uLat != null && uLng != null) {
+              if (!bookingMaps[id].userMarker) bookingMaps[id].userMarker = new mapboxgl.Marker({ color: '#0066ff' }).setLngLat([uLng, uLat]).addTo(m);
+              else bookingMaps[id].userMarker.setLngLat([uLng, uLat]);
+            }
+
+            if (tLat != null && tLng != null && uLat != null && uLng != null) {
+              await updateRoute(m, tLng, tLat, uLng, uLat);
+            }
+
+            // update status badge
+            try {
+              const card = document.getElementById('booking-map-' + id).closest('.booking-card');
+              if (card) {
+                const badgeHolder = card.querySelector('.status-badge');
+                if (badgeHolder) badgeHolder.outerHTML = statusBadge(status);
+              }
+            } catch (e) {}
+
+          } catch (e) {}
+        };
+
+        // initial poll + interval
+        await poller();
+        const iid = setInterval(poller, POLL_INTERVAL);
+        bookingMaps[id].intervalId = iid;
+      }
+
+      // small html escape
+      function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
+      window.openInGoogleMaps = function(servicemanLat, servicemanLng, userLat, userLng) {
+        const smLat = servicemanLat || '';
+        const smLng = servicemanLng || '';
+        const uLat = userLat || '';
+        const uLng = userLng || '';
+
+        let url = '';
+        if (smLat && smLng) {
+          url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(smLat + ',' + smLng)}&destination=${encodeURIComponent(uLat + ',' + uLng)}&travelmode=driving`;
+        } else {
+          url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(uLat + ',' + uLng)}`;
+        }
+        window.open(url, '_blank');
+      };
+      /* ======================================================
+     BILL UI + PAYMENT SYSTEM (Add at very bottom)
+====================================================== */
+
+function billAmount(bill) {
+  return (bill && (bill.amount ?? bill.total_price ?? bill.total ?? bill.price)) || 0;
+}
+
+async function attachBillUIForBooking(booking, wrapper) {
   try {
-    const resp = await fetch("/api/recommend-servicemen", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      },
-      body: JSON.stringify({ service_type: service, lat, lng })
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const res = await fetch('/api/bills?booking_id=' + encodeURIComponent(booking.id), {
+      headers: { Authorization: "Bearer " + token }
     });
 
-    const json = await resp.json();
-    const results = json.results || [];
-    container.innerHTML = "";
+    if (!res.ok) return;
 
-    if (results.length === 0) {
-      container.innerHTML = '<p class="text-muted">No technicians nearby.</p>';
+    const j = await res.json();
+    const bills = j.bills || j.data || [];
+    if (!bills.length) return;
+
+    const bill = bills[0];
+
+    const amt = billAmount(bill);
+    const displayAmount = Number(amt).toFixed(2);
+    const status = bill.status || bill.payment_status || "pending";
+    const billId = bill.id;
+
+    const billHtml = document.createElement("div");
+    billHtml.className = "mt-3 p-2 border rounded";
+    billHtml.innerHTML = `
+      <strong>Invoice:</strong> ₹${displayAmount}<br>
+      <small>Status: ${status}</small>
+      <div class="mt-2" id="bill-ui-${billId}"></div>
+    `;
+
+    wrapper.appendChild(billHtml);
+
+    const act = document.getElementById("bill-ui-" + billId);
+
+    if (status === "paid") {
+      act.innerHTML = `<span class='text-success'>Paid ✔</span>`;
       return;
     }
 
-    results.forEach(t => {
-      container.innerHTML += `
-        <div class="border rounded p-3 my-2 shadow-sm servicemen-info">
-          <div class="tech-info">
-            <h5>${t.full_name} (⭐ ${t.rating})</h5>
-            <p>Distance: ${t.distance_km.toFixed(2)} km</p>
-            <p>ETA: ${Math.round(t.eta_predicted)} mins</p>
-            <p>Base Cost: ₹${t.base_cost}</p>
-
-            <button class="btn btn-book select-tech"
-                    data-id="${t.id}"
-                    data-eta="${t.eta_predicted}"
-                    data-name="${t.full_name}">
-              Select
-            </button>
-          </div>
-          <div class="tech-img">
-            <img src="assets/mechanic.png">
-          </div>
-        </div>
-      `;
-    });
-
-    document.getElementById("step1").style.display = "none";
-    document.getElementById("step2").style.display = "block";
-    document.getElementById("btnSelectTech").style.display = "none";
-    document.querySelector(".modal-title").innerText = "Select Technician";
-
+    act.innerHTML = `
+      <button class="btn btn-success btn-sm" onclick="payBill('${billId}', '${amt}')">
+        Pay Bill
+      </button>
+    `;
   } catch (err) {
-    console.error(err);
-    container.innerHTML = '<p class="text-danger">Error loading technicians.</p>';
+    console.error("Bill UI error:", err);
   }
-});
+}
 
-/* ---------------------------------------------------
-   SELECT A TECHNICIAN
---------------------------------------------------- */
-document.getElementById("techList").addEventListener("click", async (e) => {
-
-  const btn = e.target.closest(".select-tech");
-  if (!btn) return;
-
-  const serviceman_id = btn.dataset.id;
-  const eta = Number(btn.dataset.eta);
-  const name = btn.dataset.name;
-
-  if (!confirm(`Confirm booking with ${name}?`)) return;
-
-  const service = document.getElementById("serviceName").value;
-  const [lat, lng] = document.getElementById("userLocation").value.split(",").map(Number);
+/* --- Payment Function --- */
+async function payBill(billId) {
   const token = localStorage.getItem("token");
 
-  try {
-    const resp = await fetch("/api/book-service", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      },
-      body: JSON.stringify({
-        serviceman_id,
-        service_type: service,
-        lat,
-        lng,
-        eta_predicted: eta
-      })
-    });
+  const res = await fetch("/api/create-payment", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ bill_id: billId })
+  });
 
-    const json = await resp.json();
+  const data = await res.json();
+  if (!data.success) {
+    console.error("Create Payment Error:", data);
+    return alert("Error: " + data.error);
+  }
 
-    if (!json.success) {
-      alert("Booking failed.");
-      return;
+  const options = {
+    key: data.key,
+    amount: data.amount,
+    currency: "INR",
+    order_id: data.order_id,
+
+    handler: async function (response) {
+      const verify = await fetch("/api/verify-payment", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          bill_id: billId,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_signature: response.razorpay_signature
+        })
+      });
+
+      const v = await verify.json();
+      if (v.success) {
+        alert("Payment Successful!");
+        loadBookings();
+      } else {
+        alert("Verification Failed!");
+      }
     }
+  };
 
-    alert("Booking Successful! ID: " + json.booking.id);
-
-    const modal = bootstrap.Modal.getInstance(document.getElementById("serviceModal"));
-    modal.hide();
-
-  } catch (error) {
-    console.error(error);
-    alert("Error booking service.");
-  }
-});
-
-/* ---------------------------------------------------
-   ⭐ FIX — RESET MODAL PROPERLY WHEN CLOSED
---------------------------------------------------- */
-document.getElementById("serviceModal").addEventListener("hidden.bs.modal", function () {
-
-  document.getElementById("step1").style.display = "block";
-  document.getElementById("step2").style.display = "none";
-  document.getElementById("btnSelectTech").style.display = "block";
-
-  const mapContainer = document.getElementById("map");
-  mapContainer.innerHTML = "";
-  mapContainer.classList.remove("mapboxgl-map");
-
-  if (currentMap) {
-    currentMap.remove();
-    currentMap = null;
-  }
-
-  document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
-  document.body.classList.remove("modal-open");
-  document.body.style.overflow = "auto";
-});
-</script>
+  const rzp = new Razorpay(options);
+  rzp.open();
+}
 
 
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    </script> 
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
   </body>
 </html>

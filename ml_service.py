@@ -1,4 +1,132 @@
-# ml_service.py
+# # ml_service.py (FINAL STABLE VERSION)
+
+# from fastapi import FastAPI
+# from pydantic import BaseModel
+# from typing import List, Optional
+# import joblib
+# import pandas as pd
+# import numpy as np
+# import math
+# import traceback
+
+
+# # ----------------------------------------------
+# # Load new ETA model
+# # ----------------------------------------------
+# ETA_MODEL_PATH = "best_eta_model.joblib"
+
+# def safe_load(path):
+#     try:
+#         model = joblib.load(path)
+#         print(f"[ML] Loaded model: {path}")
+#         return model
+#     except Exception as e:
+#         print(f"[ML] Failed to load {path}: {e}")
+#         return None
+
+# eta_model = safe_load(ETA_MODEL_PATH)
+
+# # ----------------------------------------------
+# # FastAPI setup
+# # ----------------------------------------------
+# app = FastAPI(title="FixRoute ML Service")
+
+# # ----------------------------------------------
+# # Input Schema
+# # ----------------------------------------------
+# class Serviceman(BaseModel):
+#     id: str
+#     full_name: Optional[str] = None
+#     base_cost: Optional[float] = 0.0
+#     rating: Optional[float] = 0.0
+#     location_lat: Optional[float] = None
+#     location_lng: Optional[float] = None
+
+# class PredictRequest(BaseModel):
+#     user_lat: float
+#     user_lng: float
+#     service_type: Optional[str] = ""
+#     servicemen: List[Serviceman]
+
+
+# # ----------------------------------------------
+# # Haversine distance
+# # ----------------------------------------------
+# def haversine_km(lat1, lon1, lat2, lon2):
+#     if lat2 is None or lon2 is None:
+#         return 9999.0
+#     R = 6371.0
+#     phi1, phi2 = math.radians(lat1), math.radians(lat2)
+#     dphi = math.radians(lat2 - lat1)
+#     dlambda = math.radians(lon2 - lon1)
+
+#     a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
+#     return R * 2 * math.asin(math.sqrt(a))
+
+
+# # ----------------------------------------------
+# # /predict — Main Endpoint
+# # ----------------------------------------------
+# @app.post("/predict")
+# def predict(req: PredictRequest):
+#     try:
+#         user_lat = float(req.user_lat)
+#         user_lng = float(req.user_lng)
+#         service = req.service_type or ""
+
+#         rows = []
+
+#         for s in req.servicemen:
+#             dist = haversine_km(user_lat, user_lng, s.location_lat, s.location_lng)
+
+#             # Build EXACT dataframe columns your trained model expects
+#             rows.append({
+#                 "distance_km": dist,
+#                 "base_cost": float(s.base_cost or 0.0),
+#                 "rating": float(s.rating or 0.0),
+
+#                 # Model-required (missing earlier)
+#                 "technician_charges": float(s.base_cost or 0.0),
+#                 "technician_rating": float(s.rating or 0.0),
+
+#                 # Categorical expected by pipeline
+#                 "service_type": service,
+#                 "vehicle_type": "mechanic",   # fallback category
+
+#                 # For response
+#                 "id": s.id,
+#                 "full_name": s.full_name or ""
+#             })
+
+#         # Build DataFrame (VERY important for ColumnTransformer)
+#         df = pd.DataFrame(rows)
+
+#         # Predict with model
+#         preds = eta_model.predict(df)
+
+#         df["eta_predicted"] = preds
+
+#         # Sort results
+#         df = df.sort_values("eta_predicted")
+
+#         # Prepare final output
+#         results = []
+#         for _, r in df.iterrows():
+#             results.append({
+#                 "id": r["id"],
+#                 "full_name": r["full_name"],
+#                 "distance_km": float(r["distance_km"]),
+#                 "base_cost": float(r["base_cost"]),
+#                 "rating": float(r["rating"]),
+#                 "eta_predicted": float(r["eta_predicted"])
+#             })
+
+#         return {"results": results}
+
+#     except Exception as e:
+#         print("[ML] Fatal error:", e)
+#         traceback.print_exc()
+#         return {"results": []}
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Optional
@@ -8,25 +136,119 @@ import numpy as np
 import math
 import traceback
 
-# Paths to your uploaded models
-OHE_PATH = "finalohe.pkl"
-SCALER_PATH = "finalsc.pkl"
-SVR_PATH = "finalsvr.pkl"
+# ----------------------------------------------
+# Load ETA Model
+# ----------------------------------------------
+ETA_MODEL_PATH = "best_eta_model.joblib"
 
-app = FastAPI(title="FixRoute ML Service")
-
-# Load models (best-effort). If a loader fails, keep it None and fallback later.
 def safe_load(path):
     try:
-        return joblib.load(path)
+        model = joblib.load(path)
+        print(f"[ML] Loaded model: {path}")
+        return model
     except Exception as e:
-        print(f"Warning: failed to load {path}: {e}")
+        print(f"[ML] Failed to load {path}: {e}")
         return None
 
-ohe = safe_load(OHE_PATH)
-scaler = safe_load(SCALER_PATH)
-svr = safe_load(SVR_PATH)
+eta_model = safe_load(ETA_MODEL_PATH)
 
+# ----------------------------------------------
+# Load FINAL PRICE MODEL
+# ----------------------------------------------
+FINAL_MODEL_PATH = "final_price_model.joblib"
+
+try:
+    final_price_model = joblib.load(FINAL_MODEL_PATH)
+    print("[ML] Loaded final_price_model.joblib successfully")
+except Exception as e:
+    print("[ML] ERROR loading final_price_model.joblib:", e)
+    final_price_model = None
+
+
+# ----------------------------------------------
+# FastAPI setup
+# ----------------------------------------------
+app = FastAPI(title="FixRoute ML Service")
+
+from fastapi.middleware.cors import CORSMiddleware
+
+# ENABLE CORS FOR FRONTEND
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ---------- NEW FINAL PRICE ENDPOINT ----------
+class BillingPayload(BaseModel):
+    Service_Name: str
+    User_Lat: float
+    User_Lng: float
+    Tech_Lat: float
+    Tech_Lng: float
+    Base_Charge: float
+    Spare_Part_Price: float = 0.0
+
+@app.post("/predict_price")
+def predict_price(req: BillingPayload):
+    try:
+        # DISTANCE
+        def haversine(lat1, lon1, lat2, lon2):
+            R = 6371
+            lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            a = math.sin(dlat/2)**2 + math.cos(lat1)*math.cos(lat2)*math.sin(dlon/2)**2
+            return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+        distance_km = haversine(
+            req.User_Lat, req.User_Lng,
+            req.Tech_Lat, req.Tech_Lng
+        )
+        distance_km = round(distance_km, 2)
+
+        # ETA using your existing model
+        df = pd.DataFrame([{
+            "distance_km": distance_km,
+            "base_cost": req.Base_Charge,
+            "rating": 4.5,   # fallback
+            "technician_charges": req.Base_Charge,
+            "technician_rating": 4.5,
+            "service_type": req.Service_Name,
+            "vehicle_type": "mechanic",
+        }])
+
+        eta_pred = eta_model.predict(df)[0]
+        eta_pred = round(float(eta_pred), 2)
+
+        # Surge = ETA / 2 (example)
+        surge = round(eta_pred * 0.5, 2)
+
+        # FINAL PRICE
+        final_price = round(req.Base_Charge + req.Spare_Part_Price + surge, 2)
+
+        return {
+            "status": "success",
+            "Distance_KM": distance_km,
+            "ETA_Minutes": eta_pred,
+            "Handling_Surge": surge,
+            "Base_Charge": req.Base_Charge,
+            "Spare_Part_Price": req.Spare_Part_Price,
+            "Final_Price": final_price
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+# ----------------------------------------------
+# SCHEMAS
+# ----------------------------------------------
 class Serviceman(BaseModel):
     id: str
     full_name: Optional[str] = None
@@ -34,7 +256,6 @@ class Serviceman(BaseModel):
     rating: Optional[float] = 0.0
     location_lat: Optional[float] = None
     location_lng: Optional[float] = None
-    # optional extras allowed
 
 class PredictRequest(BaseModel):
     user_lat: float
@@ -42,6 +263,19 @@ class PredictRequest(BaseModel):
     service_type: Optional[str] = ""
     servicemen: List[Serviceman]
 
+class PriceRequest(BaseModel):
+    Service_Name: str
+    User_Lat: float
+    User_Lng: float
+    Tech_Lat: float
+    Tech_Lng: float
+    Base_Charge: float
+    Spare_Part_Price: Optional[float] = 0.0
+
+
+# ----------------------------------------------
+# Haversine distance
+# ----------------------------------------------
 def haversine_km(lat1, lon1, lat2, lon2):
     if lat2 is None or lon2 is None:
         return 9999.0
@@ -49,80 +283,46 @@ def haversine_km(lat1, lon1, lat2, lon2):
     phi1, phi2 = math.radians(lat1), math.radians(lat2)
     dphi = math.radians(lat2 - lat1)
     dlambda = math.radians(lon2 - lon1)
+
     a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
     return R * 2 * math.asin(math.sqrt(a))
 
+
+# ----------------------------------------------
+# ETA Prediction Endpoint
+# ----------------------------------------------
 @app.post("/predict")
 def predict(req: PredictRequest):
     try:
         user_lat = float(req.user_lat)
         user_lng = float(req.user_lng)
         service = req.service_type or ""
+
         rows = []
+
         for s in req.servicemen:
             dist = haversine_km(user_lat, user_lng, s.location_lat, s.location_lng)
+
             rows.append({
-                "id": s.id,
-                "full_name": s.full_name or "",
                 "distance_km": dist,
                 "base_cost": float(s.base_cost or 0.0),
                 "rating": float(s.rating or 0.0),
-                "service_type": service
+                "technician_charges": float(s.base_cost or 0.0),
+                "technician_rating": float(s.rating or 0.0),
+                "service_type": service,
+                "vehicle_type": "mechanic",
+                "id": s.id,
+                "full_name": s.full_name or ""
             })
 
         df = pd.DataFrame(rows)
-        if df.empty:
-            return {"results": []}
 
-        # Build feature matrix. We'll try:
-        # numeric = [distance_km, base_cost, rating]
-        X_num = df[["distance_km", "base_cost", "rating"]].astype(float).values
-
-        # Try to add OHE of service_type (if available)
-        X = X_num
-        if ohe is not None:
-            try:
-                svc_ohe = ohe.transform(df[["service_type"]])
-                # convert sparse to dense if needed
-                try:
-                    svc_ohe = svc_ohe.toarray()
-                except Exception:
-                    pass
-                X = np.hstack([X_num, svc_ohe])
-            except Exception as e:
-                # fallback: attempt to OHE other columns or skip
-                print("OHE transform failed on service_type:", e)
-                # don't augment X in this case
-
-        # Scale if scaler loaded
-        X_scaled = X
-        if scaler is not None:
-            try:
-                X_scaled = scaler.transform(X)
-            except Exception as e:
-                print("Scaler transform failed, using unscaled X:", e)
-                X_scaled = X
-
-        # Predict with SVR
-        if svr is not None:
-            try:
-                preds = svr.predict(X_scaled)
-                df["eta_predicted"] = [float(p) for p in preds]
-            except Exception as e:
-                print("SVR predict failed:", e)
-                traceback.print_exc()
-                # fallback heuristic
-                df["eta_predicted"] = df["distance_km"] * 2.0 - df["rating"] * 0.5
-                df["eta_predicted"] = df["eta_predicted"].clip(lower=1.0)
-        else:
-            # no model loaded -> heuristic
-            df["eta_predicted"] = df["distance_km"] * 2.0 - df["rating"] * 0.5
-            df["eta_predicted"] = df["eta_predicted"].clip(lower=1.0)
-
-        df_sorted = df.sort_values("eta_predicted").reset_index(drop=True)
+        preds = eta_model.predict(df)
+        df["eta_predicted"] = preds
+        df = df.sort_values("eta_predicted")
 
         results = []
-        for _, r in df_sorted.iterrows():
+        for _, r in df.iterrows():
             results.append({
                 "id": r["id"],
                 "full_name": r["full_name"],
@@ -135,6 +335,59 @@ def predict(req: PredictRequest):
         return {"results": results}
 
     except Exception as e:
-        print("Predict exception:", e)
         traceback.print_exc()
         return {"results": []}
+
+
+# ----------------------------------------------
+# FINAL PRICE PREDICTION ENDPOINT
+# ----------------------------------------------
+@app.post("/predict_price")
+def predict_price(req: PriceRequest):
+    try:
+        # 1. Distance
+        dist = haversine_km(req.User_Lat, req.User_Lng, req.Tech_Lat, req.Tech_Lng)
+
+        # 2. ETA estimation
+        avg_speed_km_h = 30
+        eta_minutes = round((dist / avg_speed_km_h) * 60, 2)
+
+        # 3. ML model input
+        df = pd.DataFrame([{
+            "Service_Name": req.Service_Name,
+            "User_Lat": req.User_Lat,
+            "User_Lng": req.User_Lng,
+            "Tech_Lat": req.Tech_Lat,
+            "Tech_Lng": req.Tech_Lng,
+            "Final_Distance_KM": dist,
+            "Final_ETA_Minutes": eta_minutes
+        }])
+
+        # 4. Predict surge using your final model
+        handling_surge = float(final_price_model.predict(df)[0])
+
+        # 5. Compute final price
+        final_price = req.Base_Charge + handling_surge + float(req.Spare_Part_Price or 0)
+
+        return {
+            "status": "success",
+            "Distance_KM": round(dist, 2),
+            "ETA_Minutes": eta_minutes,
+            "Handling_Surge": round(handling_surge, 2),
+            "Base_Charge": req.Base_Charge,
+            "Spare_Part_Price": req.Spare_Part_Price,
+            "Final_Price": round(final_price, 2)
+        }
+
+    except Exception as e:
+        traceback.print_exc()
+        return {"status": "error", "message": str(e)}
+    
+
+
+# ----------------------------------------------
+# Run server
+# ----------------------------------------------
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=9000)
