@@ -1052,7 +1052,8 @@ app.post('/api/recommend-servicemen', auth, async (req, res) => {
       }))
     };
 
-    const mlResp = await axios.post('http://127.0.0.1:9000/predict', mlPayload);
+    const mlResp = await axios.post('https://fixroute-ml.onrender.com/predict', mlPayload);
+
     res.json({ results: mlResp.data.results });
   } catch (err) {
     res.status(500).json({ error: String(err) });
