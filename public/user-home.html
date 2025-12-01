@@ -290,7 +290,7 @@
 
               <!-- SAVE + RESET BUTTONS -->
               <div class="d-flex gap-2 mt-3">
-                <button class="btn btn-book btn-sm" id="btnSaveLocation">💾 Save This Location</button>
+                <button class="btn btn-book btn-sm" id="btnSaveLocation">Save This Location</button>
                 <button class="btn btn-cancel btn-sm" id="btnResetLocation">Reset</button>
               </div>
               <small class="text-muted d-block mt-2">
@@ -1079,37 +1079,97 @@ async function attachBillUIForBooking(booking, wrapper) {
 
     const bill = bills[0];
 
-    const amt = billAmount(bill);
-    const displayAmount = Number(amt).toFixed(2);
-    const status = bill.status || bill.payment_status || "pending";
-    const billId = bill.id;
+    // Safe numeric fields (fallback to 0)
+    const aiPrice = Number(bill.ai_price ?? 0);
+    const sparePrice = Number(bill.spare_part_price ?? 0);
+    // If bill.amount exists use it, otherwise sum parts as fallback
+    const totalAmount = Number(bill.amount ?? (aiPrice + sparePrice));
+    const displayAmount = totalAmount.toFixed(2);
 
+    const status = (bill.status || bill.payment_status || "pending").toLowerCase();
+    const billId = bill.id;
+    const description = bill.description || "";
+    // optionally show serviceman name if included on bill
+    const servicemanName = (bill.serviceman_name || (bill.serviceman ? bill.serviceman.full_name : null) || "");
+
+    // helper: format currency
+    function formatINR(v) {
+      if (isNaN(v)) v = 0;
+      // basic formatting with two decimals and comma thousands
+      return v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // build detailed bill HTML
     const billHtml = document.createElement("div");
-    billHtml.className = "mt-3 p-2 border rounded";
+    billHtml.className = "mt-3 p-3 border rounded bg-white";
+
     billHtml.innerHTML = `
-      <strong>Invoice:</strong> ₹${displayAmount}<br>
-      <small>Status: ${status}</small>
-      <div class="mt-2" id="bill-ui-${billId}"></div>
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <div>
+          <h5 class="mb-1">Invoice</h5>
+          <div class="small text-muted">Booking: ${escapeHtml(String(booking.id || ''))}</div>
+          ${servicemanName ? `<div class="small text-muted">Serviceman: ${escapeHtml(servicemanName)}</div>` : ''}
+        </div>
+        <div class="text-end">
+          <div class="small text-muted">Status</div>
+          <div class="fw-bold ${status === 'paid' ? 'text-success' : 'text-warning'}">${escapeHtml(status)}</div>
+        </div>
+      </div>
+
+      <table class="table table-sm mb-2">
+        <tbody>
+          <tr>
+            <td><strong>AI Price</strong></td>
+            <td class="text-end">₹${formatINR(aiPrice)}</td>
+          </tr>
+          <tr>
+            <td><strong>Spare Part Price</strong></td>
+            <td class="text-end">₹${formatINR(sparePrice)}</td>
+          </tr>
+          <tr>
+            <td><strong>Other / Fees</strong></td>
+            <td class="text-end">₹${formatINR(Number(bill.other_fees ?? 0))}</td>
+          </tr>
+          <tr>
+            <td><strong>Total</strong></td>
+            <td class="text-end fw-bold">₹${formatINR(totalAmount)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      ${description ? `<div class="mb-2"><strong>Notes:</strong> ${escapeHtml(description)}</div>` : ''}
+
+      <div id="bill-ui-${billId}" class="mt-1"></div>
     `;
 
     wrapper.appendChild(billHtml);
 
     const act = document.getElementById("bill-ui-" + billId);
 
+    if (!act) return;
+
     if (status === "paid") {
       act.innerHTML = `<span class='text-success'>Paid ✔</span>`;
       return;
     }
 
+    // preserve existing payBill signature (billId, amt)
     act.innerHTML = `
-      <button class="btn btn-success btn-sm" onclick="payBill('${billId}', '${amt}')">
-        Pay Bill
-      </button>
+      <div class="d-flex gap-2">
+        <button class="btn btn-success btn-sm" onclick="payBill('${billId}', '${totalAmount}')">
+          Pay Bill — ₹${formatINR(totalAmount)}
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="downloadBill('${billId}')">
+          Download
+        </button>
+      </div>
     `;
+
   } catch (err) {
     console.error("Bill UI error:", err);
   }
 }
+
 
 /* --- Payment Function --- */
 async function payBill(billId) {

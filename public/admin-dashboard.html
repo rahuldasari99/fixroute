@@ -1,15 +1,80 @@
-<!doctype html><html><head><meta charset="utf-8"><title>Admin</title></head><body>
-<h1>Admin Dashboard</h1>
-<pre id="profile"></pre>
-<button id="logout">Logout</button>
-<script>
-async function load() {
-  const t = localStorage.getItem('token');
-  if (!t) return location.href='index.html';
-  const r = await fetch('/api/me', { headers: { Authorization: 'Bearer ' + t }});
-  if (!r.ok) { localStorage.clear(); return location.href='index.html'; }
-  const j = await r.json(); document.getElementById('profile').textContent = JSON.stringify(j.profile,null,2);
-}
-document.getElementById('logout').addEventListener('click', ()=>{ localStorage.clear(); location.href='index.html'; });
-load();
-</script></body></html>
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <title>FixRoute Auth</title>
+ 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;600;700;900&display=swap" rel="stylesheet">
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
+
+</head>
+
+<body>
+   <nav class="navbar navbar-expand-sm bg-black sticky-top py-1">
+      <div class="container navedit">
+        <a class="navbar-brand text-white" href="#"
+          ><span class="display-6 fw-bold">Fix</span><span class="display-5">Route</span></a
+        >
+        <button
+          class="bi bi-list d-lg-none d-md-none"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        ></button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+           
+            <li class="nav-item">
+              <a class="nav-link"  data-bs-toggle="modal" data-bs-target="#staticBackdrop1" onclick="loadUsers()"
+                >USERS</a>
+              
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" onclick="loadServicemen()" >SERVICEMEN</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" onclick="loadBills()" >BILLS</a>
+            </li>
+            
+            <li class="nav-item">
+              <a class="nav-link" onclick="loadBookings()" >BOOKINGS</a>
+            </li>
+
+              <li class="nav-item">
+              <a class="nav-link" id="logout" >LOGOUT</a>
+            </li>
+         
+          </ul>
+         
+        </div>
+        
+      </div>
+    </nav>
+
+
+
+<!-- <button class="btn btn-success mb-3" onclick="loadServicemen()">All Servicemen</button>
+<button class="btn btn-warning mb-3" onclick="loadBills()">All Bills</button>
+<button class="btn btn-danger mb-3" onclick="loadBookings()">All Bookings</button> -->
+<div class="container">
+  <p class="fs-4 fw-normal"><span id="adminNameNav"></span>, your tools. Your skills. Your mission today awaits!</p>
+  <div id="adminProfileInfo"></div>
+  <div id="content">
+
+  </div>
+</div>
+
+
+<script src="admin.js"></script>
+</body>
+</html>

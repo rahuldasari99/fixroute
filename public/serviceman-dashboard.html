@@ -47,7 +47,25 @@
     <!-- main -->
     <div class="container my-4">
       <p class="fs-4 fw-normal"><span id="userName"></span>, your tools. Your skills. Your mission today awaits!</p>
-
+   <div id="carouselExample" class="carousel slide custom-carousel">
+        <div class="carousel-inner">
+          <div class="carousel-item active">
+            <img src="assets/ChatGPT Image Nov 18, 2025 at 12_27_41 PM.png" class="d-block w-100" alt="...">
+            <div class="carousel-caption d-none d-md-block">
+              <p class="display-3 fw-bold">You keep the city moving</p>
+              <p class="fs-4">Quick help anytime, Anywhere</p>
+            </div>
+          </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
+      </div>
       <div class="row g-4">
         <!-- left column -->
         <div class="col-sm-12 col-md-6 col-lg-6">
@@ -68,7 +86,7 @@
         <!-- right column -->
         <div class="col-sm-12 col-md-6 col-lg-6">
           <div class="card user-card p-5">
-            <h4 class="mt-4">Accepted Jobs (Top)</h4>
+            <h4 class="mt-4 text-center">Accepted Jobs</h4>
             <!-- accepted jobs container (will not be refreshed by polling) -->
             <div id="acceptedJobs" class="accepted-section">
              
@@ -77,7 +95,7 @@
 
             <hr>
 
-            <h4 class="mt-4">Pending Requests (Below)</h4>
+            <h4 class="mt-4 text-center">Pending Requests</h4>
             <!-- pending requests container (polls every 5s) -->
             <div id="pendingRequests" class="pending-section"></div>
           </div>
@@ -143,6 +161,73 @@
     </div>
   </div>
 </div>
+
+
+<footer class="footer p-4 border-top footer-txt bg-black">
+      <div class="container">
+        <!-- footer-navigation start -->
+        <div class="row">
+          <!-- col-1 -->
+          <div class="col-sm-12 col-md-3 col-lg-3">
+            <!-- brand-information -->
+             <a class="navbar-brand text-white" href="#"
+          ><span class="display-6 fw-bold">Fix</span><span class="display-5">Route</span></a
+        >
+
+            <!-- brand-title -->
+            <p class="text-lead text-capitalize mb-2">
+              FixRoute Analytics helps you understand real-time service demand, track technician performance, and identify high-request zones. With data-driven insights, your team can respond faster, allocate technicians better, and deliver a smoother on-road assistance experience.
+            </p>
+            <!-- social media icons -->
+            <div class="footer-social-icons my-3">
+              <i class="fs-4 p-2 border rounded bi bi-whatsapp"></i>
+              <i class="fs-4 p-2 border rounded bi bi-facebook"></i>
+              <i class="fs-4 p-2 border rounded bi bi-instagram"></i>
+              <i class="fs-4 p-2 border rounded bi bi-linkedin"></i>
+            </div>
+          </div>
+          <!-- col-2 -->
+          <div class="col-sm-12 col-md-3 col-lg-3">
+            <h4 class="fw-bold">Quick Links</h4>
+            <ul class="list-unstyled">
+              <li class="p-1">Home</li>
+              <li class="p-1">Services</li>
+            
+              <li class="p-1">Analytics</li>
+              <li class="p-1">Contact</li>
+            </ul>
+          </div>
+          <!-- col-3 -->
+          <div class="col-sm-12 col-md-3 col-lg-3">
+            <h4 class="fw-bold">Services</h4>
+            <ul class="list-unstyled">
+              <li class="p-1">Insights & Reports</li>
+              <li class="p-1">Recommendations</li>
+              <li class="p-1">usage dashboard</li>
+              <li class="p-1">Visualizations</li>
+            </ul>
+          </div>
+          <!-- col-4 -->
+          <div class="col-sm-12 col-md-3 col-lg-3">
+            <h4 class="fw-bold">Get to know us</h4>
+            <ul class="list-unstyled">
+              <li class="p-1">About Fixroute</li>
+              <li class="p-1">Terms&Conditions</li>
+              <li class="p-1">Privacy Policy</li>
+
+              <li class="p-1">Careers</li>
+            </ul>
+          </div>
+        </div>
+        <hr class="border-top  border-2" />
+        <!-- footer-navigation end -->
+        <div class="text-center">
+          <p class="fs-6 fw-bold">
+            Copyright &copy; 2025 fixroute. All Right Reserved
+          </p>
+        </div>
+      </div>
+    </footer>
 
 
     <!-- scripts -->
@@ -693,85 +778,70 @@ async function sendBill(bookingId) {
 
   const token = localStorage.getItem("token");
 
-  // 1️⃣ Fetch accepted bookings
+  // 1. Fetch accepted jobs
   const res = await fetch("/api/serviceman/accepted", {
     headers: { "Authorization": "Bearer " + token }
   });
+
   const data = await res.json();
-
   const booking = data.requests.find(b => b.id === bookingId);
-  if (!booking) {
-    alert("Booking not found!");
-    return;
-  }
 
-  // 2️⃣ Fetch serviceman profile to get base_cost + location
-  const meRes = await fetch("/api/me", {
+  if (!booking) return alert("Booking not found!");
+
+  // 2. Fetch serviceman info
+  const smRes = await fetch("/api/me", {
     headers: { "Authorization": "Bearer " + token }
   });
-  const me = await meRes.json();
 
-  const baseCost = Number(me.profile.base_cost || 0);
-  let techLat = booking.serviceman_lat || me.profile.location_lat;
-  let techLng = booking.serviceman_lng || me.profile.location_lng;
+  const smData = await smRes.json();
+  const sm = smData.profile;
 
-  if (!techLat || !techLng) {
-    alert("Please update your live location before sending bill.");
-    return;
-  }
-
-  // 3️⃣ Prepare ML payload
+  // 3. ML Payload
   const mlPayload = {
     Service_Name: booking.service_type,
     User_Lat: booking.lat,
     User_Lng: booking.lng,
-    Tech_Lat: techLat,
-    Tech_Lng: techLng,
-    Base_Charge: baseCost,
+    Tech_Lat: sm.location_lat,
+    Tech_Lng: sm.location_lng,
+    Base_Charge: Number(sm.base_cost) || 0,
     Spare_Part_Price: 0
   };
 
-  // 4️⃣ Call ML API
-  const mlRes = await fetch("api/predict_price", {
+  // 4. Call ML Server (LOCALHOST ONLY)
+  const mlRes = await fetch("http://127.0.0.1:9000/predict_price", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(mlPayload)
   });
 
   const ml = await mlRes.json();
-
   if (ml.status !== "success") {
     alert("AI Billing failed!");
     return;
   }
 
-  // 5️⃣ Fill the modal UI
+  // 5. Show AI values (no extra ₹ symbols)
   document.getElementById("aiDistance").innerText = ml.Distance_KM + " km";
   document.getElementById("aiETA").innerText = ml.ETA_Minutes + " mins";
   document.getElementById("aiSurge").innerText = ml.Handling_Surge;
   document.getElementById("aiBase").innerText = ml.Base_Charge;
   document.getElementById("aiFinalPrice").innerText = ml.Final_Price;
 
-  // Save the predicted final price
+  // Store final price (without spare)
   document.getElementById("billFinalPrice").value = ml.Final_Price;
 
-  // Reset user input fields
-  document.getElementById("billSpare").value = "";
-  document.getElementById("billDesc").value = "";
-
-  // 6️⃣ Show modal
-  const modal = new bootstrap.Modal(document.getElementById("billModal"));
-  modal.show();
+  new bootstrap.Modal(document.getElementById("billModal")).show();
 }
 
 
 async function submitBill() {
   const bookingId = document.getElementById("billBookingId").value;
-  const finalPrice = Number(document.getElementById("billFinalPrice").value);
-  const spare = Number(document.getElementById("billSpare").value || 0);
   const description = document.getElementById("billDesc").value;
 
-  const totalAmount = finalPrice + spare;
+  const spare_price = Number(document.getElementById("billSpare").value || 0);
+  const aiFinal = Number(document.getElementById("billFinalPrice").value);
+
+  const finalPrice = aiFinal + spare_price; // add spare price
 
   const token = localStorage.getItem("token");
 
@@ -783,8 +853,8 @@ async function submitBill() {
     },
     body: JSON.stringify({
       booking_id: bookingId,
-      base_price: finalPrice,
-      extra_charges: spare,
+      spare_part_price: spare_price,
+      final_price: finalPrice,
       description
     })
   });
@@ -793,11 +863,8 @@ async function submitBill() {
 
   if (j.success) {
     alert("Bill Sent Successfully!");
-
-    // Close modal
     bootstrap.Modal.getInstance(document.getElementById("billModal")).hide();
 
-    // Disable "Send Bill" button in the card
     const card = document.getElementById("acc-" + bookingId);
     if (card) {
       const btn = card.querySelector(".btn-primary");
@@ -806,14 +873,10 @@ async function submitBill() {
         btn.disabled = true;
       }
     }
-
   } else {
     alert("Error: " + j.error);
   }
 }
-
-
-
 
       /*********************
        * Google Maps open

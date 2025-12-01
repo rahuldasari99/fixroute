@@ -192,3 +192,81 @@ input:focus {
   height: 100%;
   width: 100%;
 }
+
+
+
+  .table-title {
+    margin-top: 10px;
+    font-size: 26px;
+    font-weight: 700;
+    color: #333;
+    border-left: 5px solid orangered;
+    padding-left: 10px;
+  }
+
+  .table-wrapper {
+    margin-top: 15px;
+    max-height: 460px; /* ensures table fits in one window */
+    overflow-y: auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  .styled-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: white;
+  }
+
+  .styled-table thead {
+    background: rgb(254, 138, 96);
+    color: white;
+  }
+
+  .styled-table thead th {
+    font-weight: 700;
+    padding: 12px;
+    text-transform: capitalize;
+    font-size: 15px;
+  }
+
+  .styled-table tbody tr:hover {
+    background: #f3f7ff;
+  }
+
+  .styled-table td {
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    max-width: 180px;
+    word-wrap: break-word;
+  }
+
+  .styled-table tbody tr:nth-child(even) {
+    background: #fafafa;
+  }
+
+  .edit-btn {
+    background: #0d6efd;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .edit-btn:hover {
+    background: #0b5ed7;
+  }
+
+  .no-data {
+    margin-top: 20px;
+    font-size: 18px;
+    color: #888;
+  }
+

@@ -936,6 +936,12 @@ function auth(req, res, next) {
   }
 }
 
+ function adminOnly(req, res, next) {
+   if (!req.user || req.user.role !== "admin") {
+     return res.status(403).json({ error: "Admin only" });
+   }
+   next();
+ }
 /* =============================
    /api/me
 ============================= */
@@ -1052,8 +1058,7 @@ app.post('/api/recommend-servicemen', auth, async (req, res) => {
       }))
     };
 
-    const mlResp = await axios.post('https://fixroute-ml.onrender.com/predict', mlPayload);
-
+    const mlResp = await axios.post('http://127.0.0.1:9000/predict', mlPayload);
     res.json({ results: mlResp.data.results });
   } catch (err) {
     res.status(500).json({ error: String(err) });
@@ -1348,21 +1353,6 @@ app.get('/api/user/bookings', auth, async (req, res) => {
     return res.status(500).json({ error: String(err) });
   }
 });
-/* =============================
-   ML → PRICE PREDICTION (Forward to Render ML Server)
-============================= */
-app.post("/api/predict_price", async (req, res) => {
-  try {
-    const mlUrl = process.env.ML_API_URL + "/predict_price";
-
-    const response = await axios.post(mlUrl, req.body);
-
-    res.json(response.data);
-  } catch (err) {
-    console.error("ML predict_price ERROR:", err?.response?.data || err);
-    res.status(500).json({ error: "ML service unavailable" });
-  }
-});
 
 
 // FIX: Unified token validator for all billing routes
@@ -1387,75 +1377,55 @@ async function validateToken(req) {
 /* =============================
    BILLING — SEND BILL (Serviceman) with AI pricing
 ============================= */
+/* =============================
+   BILLING — SEND BILL (Serviceman) with AI pricing
+============================= */
 app.post("/api/send-bill", async (req, res) => {
   try {
     const user = await validateToken(req);
     if (!user || user.role !== "serviceman")
       return res.status(401).json({ error: "Invalid token" });
 
-    const { booking_id, spare_part_price = 0, service_name } = req.body;
+    const { booking_id, spare_part_price = 0, final_price, description } = req.body;
 
-    // Step 1 — Fetch booking
-    const { data: booking, error: bErr } = await supabase
+    // Fetch booking
+    const { data: booking } = await supabase
       .from("bookings")
       .select(`*, servicemen(*)`)
       .eq("id", booking_id)
       .single();
 
-    if (bErr || !booking)
-      return res.status(404).json({ error: "Booking not found" });
+    if (!booking) return res.status(404).json({ error: "Booking not found" });
 
-    if (booking.serviceman_id !== user.id)
-      return res.status(403).json({ error: "Not your booking" });
+    // final_price already includes AI price + spare part
+    const amountToCharge = Number(final_price); 
 
-    const sm = booking.servicemen;
-
-    // Step 2 — Build ML request for final price
-    const mlPayload = {
-      Service_Name: service_name || booking.service_type,
-      User_Lat: booking.lat,
-      User_Lng: booking.lng,
-      Tech_Lat: sm.location_lat,
-      Tech_Lng: sm.location_lng,
-      Base_Charge: sm.base_cost || 0,
-      Spare_Part_Price: Number(spare_part_price || 0)
-    };
-
-    // Step 3 — Call ML server for final price
-    const mlResp = await axios.post("http://127.0.0.1:9000/predict_price", mlPayload);
-    if (mlResp.data.status !== "success")
-      return res.status(500).json({ error: "ML price generation failed" });
-
-    const final_price = mlResp.data.Final_Price;
-
-    // Step 4 — Insert bill
-    const { data: bill, error: billErr } = await supabase
+    // Insert bill
+    const { data: bill, error } = await supabase
       .from("bills")
       .insert({
         booking_id,
         user_id: booking.user_id,
         serviceman_id: user.id,
-        amount: final_price,
-        description: `AI generated bill for ${booking.service_type}`,
+        amount: amountToCharge,          // <-- Correct amount
+        spare_part_price: spare_part_price, 
+        ai_price: final_price - spare_part_price, // <-- AI price only
+        description: description || "AI generated bill",
         status: "sent"
       })
       .select()
       .single();
 
-    if (billErr) {
-      console.log("Supabase Insert Error:", billErr);
-      return res.status(500).json({ error: "Failed to send bill" });
-    }
+    if (error) return res.status(500).json({ error: "Failed to send bill" });
 
-    // Step 5 — Mark job completed
+    // Mark job completed
     await supabase.from("bookings")
       .update({ status: "completed" })
       .eq("id", booking_id);
 
     return res.json({
       success: true,
-      bill,
-      ai_details: mlResp.data      // OPTIONAL: show full ML breakdown
+      bill
     });
 
   } catch (err) {
@@ -1611,6 +1581,88 @@ app.get("/api/bills", async (req, res) => {
     res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 });
+
+//admin
+app.get("/api/admin/users", auth, adminOnly, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    res.json({ success: true, users: data });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+app.get("/api/admin/servicemen", auth, adminOnly, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("servicemen")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    res.json({ success: true, servicemen: data });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+app.put("/api/admin/update", auth, adminOnly, async (req, res) => {
+  try {
+    const { table, id, updates } = req.body;  
+    if (!table || !id || !updates) {
+      return res.status(400).json({ error: "table, id, updates required" });
+    }
+
+    const { data, error } = await supabase
+      .from(table)
+      .update(updates)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({ success: true, updated: data });
+
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+app.get("/api/admin/bills", auth, adminOnly, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("bills")
+      .select("*, users(full_name), servicemen(full_name)")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    res.json({ success: true, bills: data });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+app.get("/api/admin/bookings", auth, adminOnly, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*, users(full_name), servicemen(full_name)")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    res.json({ success: true, bookings: data });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
 
 /* =============================
    STATIC FRONTEND
